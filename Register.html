@@ -8,59 +8,38 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        body { background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%); color: white; }
-        .form-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%); color: white; font-family: sans-serif; }
+        .form-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .input-box { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; padding: 12px; border-radius: 12px; margin-top: 4px; color: white; outline: none; }
+        .upload-slot { border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 15px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .upload-slot:hover { border-color: #6366f1; background: rgba(99, 102, 241, 0.05); }
     </style>
 </head>
-<body class="p-6">
+<body class="p-4 pb-20">
     <div class="max-w-md mx-auto">
         <h1 class="text-2xl font-bold mb-6 text-center text-indigo-400">填寫個人資料</h1>
-        <div class="form-card rounded-3xl p-6 space-y-4">
-            <div><label class="text-xs text-gray-400">姓名</label><input type="text" id="regName" class="input-box" placeholder="請輸入全名"></div>
-            <div><label class="text-xs text-gray-400">身分證字號</label><input type="text" id="regId" class="input-box" placeholder="A123456789"></div>
-            <div><label class="text-xs text-gray-400">手機號碼</label><input type="tel" id="regPhone" class="input-box" placeholder="0912345678"></div>
-            <div><label class="text-xs text-gray-400">驗證碼 (預設1234)</label><input type="text" id="regCode" class="input-box" placeholder="請輸入1234"></div>
-            <div><label class="text-xs text-gray-400">撥款帳戶</label><input type="text" id="regBank" class="input-box" placeholder="戶名+銀行代碼+帳號"></div>
-            
-            <button onclick="handleRegister()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold text-lg mt-4 shadow-lg active:scale-95 transition-all">送出申請</button>
-            <center><a href="index.html" class="text-xs text-gray-500">已有帳號？返回登入</a></center>
-        </div>
-    </div>
+        
+        <div class="form-card rounded-3xl p-6 space-y-8">
+            <section class="space-y-4">
+                <h2 class="text-indigo-300 font-bold border-l-4 border-indigo-500 pl-2">基本資料</h2>
+                <div><label class="text-xs text-gray-400">姓名</label><input type="text" id="name" class="input-box" placeholder="請輸入全名"></div>
+                <div><label class="text-xs text-gray-400">生日</label><input type="date" id="birthday" class="input-box"></div>
+                <div><label class="text-xs text-gray-400">身分證字號</label><input type="text" id="idCard" class="input-box" placeholder="A123456789"></div>
+                <div class="flex gap-2 items-end">
+                    <div class="flex-1"><label class="text-xs text-gray-400">手機號碼</label><input type="tel" id="phone" class="input-box" placeholder="0912345678"></div>
+                    <button onclick="alert('驗證碼已發送至您的手機')" class="bg-indigo-600 px-3 py-3 rounded-xl text-xs font-bold h-[48px]">獲取驗證碼</button>
+                </div>
+                <div><label class="text-xs text-gray-400">驗證碼 (測試期間請輸入1234)</label><input type="text" id="vCode" class="input-box" placeholder="請輸入1234"></div>
+                <div><label class="text-xs text-gray-400">戶籍地址</label><input type="text" id="hAddr" class="input-box"></div>
+                <div><label class="text-xs text-gray-400">現居地址</label><input type="text" id="cAddr" class="input-box"></div>
+                <div><label class="text-xs text-gray-400">職業 / 公司名稱</label><input type="text" id="job" class="input-box" placeholder="例如: 學生 / 某某貿易公司"></div>
+                <div><label class="text-xs text-gray-400">撥款帳戶</label><input type="text" id="bank" class="input-box" placeholder="戶名 + 銀行代碼 + 帳號"></div>
+            </section>
 
-    <script>
-        // 初始化 Firebase (請確保使用你的配置)
-        const firebaseConfig = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        function handleRegister() {
-            const name = document.getElementById('regName').value;
-            const idCard = document.getElementById('regId').value.trim().toUpperCase();
-            const phone = document.getElementById('regPhone').value;
-            const code = document.getElementById('regCode').value;
-            const bank = document.getElementById('regBank').value;
-
-            if (!name || !idCard || !phone || !bank) return alert("請完整填寫所有欄位");
-            if (code !== "1234") return alert("驗證碼錯誤");
-
-            const userData = {
-                name: name,
-                idCard: idCard,
-                phone: phone,
-                bankAccount: bank,
-                status: 'pending',
-                loanLimit: '審核中'
-            };
-
-            // 存入 Firebase
-            db.ref('users/' + idCard).set(userData).then(() => {
-                alert("註冊成功！資料已送出審核。");
-                window.location.href = "index.html"; // 回首頁登入
-            }).catch(err => {
-                alert("系統錯誤: " + err.message);
-            });
-        }
-    </script>
-</body>
-</html>
+            <section class="space-y-4">
+                <h2 class="text-indigo-300 font-bold border-l-4 border-indigo-500 pl-2">聯絡人 (最少三名)</h2>
+                <div id="contactGroup" class="space-y-3">
+                    <div class="bg-white/5 p-3 rounded-xl space-y-2"><div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"></div><input type="tel" placeholder="電話" class="input-box text-sm"><label class="text-[10px] text-gray-500 flex items-center gap-1"><input type="checkbox">保密不照會</label></div>
+                    <div class="bg-white/5 p-3 rounded-xl space-y-2"><div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"></div><input type="tel" placeholder="電話" class="input-box text-sm"><label class="text-[10px] text-gray-500 flex items-center gap-1"><input type="checkbox">保密不照會</label></div>
+                    <div class="bg-white/5 p-3 rounded-xl space-y-2"><div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box
+                                                                                                                                                               
