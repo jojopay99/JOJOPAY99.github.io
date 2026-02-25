@@ -84,5 +84,10 @@
         const savedLimit = localStorage.getItem('user_loan_limit') || "30,000";
         document.getElementById('loanLimit').innerText = savedLimit;
     </script>
+    const userId = localStorage.getItem('currentUser');
+db.ref('users/' + userId).on('value', (snapshot) => {
+    const data = snapshot.val();
+    document.getElementById('loanLimit').innerText = data.loanLimit;
+});
 </body>
 </html>
