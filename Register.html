@@ -1,155 +1,26 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOJOPAY | 會員註冊</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%);
-            color: white;
-            font-family: -apple-system, "Microsoft JhengHei", sans-serif;
-        }
-        .form-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .input-box {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            width: 100%;
-            padding: 12px;
-            border-radius: 12px;
-            margin-top: 4px;
-            outline: none;
-        }
-        .input-box:focus { border-color: #6366f1; }
-        .upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .upload-area:hover { border-color: #6366f1; background: rgba(99, 102, 241, 0.05); }
-    </style>
-</head>
-<body class="p-6 pb-20">
+<script>
+    const firebaseConfig = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    <div class="max-w-md mx-auto">
-        <h1 class="text-2xl font-bold mb-6 text-center text-indigo-400">填寫個人資料</h1>
+    function submitForm() {
+        const idCard = document.querySelector('input[placeholder="A123456789"]').value.toUpperCase();
+        const phone = document.getElementById('phone').value;
+        
+        if(!idCard || !phone) return alert("請填寫基本資料");
 
-        <div class="form-card rounded-3xl p-6 space-y-6">
-            
-            <section class="space-y-4">
-                <h2 class="border-l-4 border-indigo-500 pl-2 font-bold">基本資料</h2>
-                <div><label class="text-xs text-gray-400">姓名</label><input type="text" class="input-box" placeholder="請輸入全名"></div>
-                <div><label class="text-xs text-gray-400">生日</label><input type="date" class="input-box"></div>
-                <div><label class="text-xs text-gray-400">身分證字號</label><input type="text" class="input-box" placeholder="A123456789"></div>
-                
-                <div class="flex gap-2 items-end">
-                    <div class="flex-1">
-                        <label class="text-xs text-gray-400">手機號碼</label>
-                        <input type="tel" id="phone" class="input-box" placeholder="0912345678">
-                    </div>
-                    <button onclick="sendCode()" class="bg-indigo-600 px-4 py-3 rounded-xl text-sm font-bold h-[50px]">獲取驗證碼</button>
-                </div>
-                <div id="verifyDiv" class="hidden">
-                    <label class="text-xs text-gray-400">驗證碼 (測試期間請輸入1234)</label>
-                    <input type="text" id="verifyCode" class="input-box" placeholder="請輸入驗證碼">
-                </div>
+        const userData = {
+            name: document.querySelector('input[placeholder="請輸入全名"]').value,
+            idCard: idCard,
+            phone: phone,
+            bankAccount: document.querySelector('input[placeholder="戶名 + 銀行代碼 + 帳號"]').value,
+            status: 'pending',
+            loanLimit: '尚未估算'
+        };
 
-                <div><label class="text-xs text-gray-400">戶籍地址</label><input type="text" class="input-box"></div>
-                <div><label class="text-xs text-gray-400">現居地址</label><input type="text" class="input-box"></div>
-                <div><label class="text-xs text-gray-400">職業</label><input type="text" class="input-box"></div>
-                <div><label class="text-xs text-gray-400">公司/學校名稱</label><input type="text" class="input-box"></div>
-                <div>
-                    <label class="text-xs text-gray-400">撥款帳戶</label>
-                    <input type="text" class="input-box" placeholder="戶名 + 銀行代碼 + 帳號">
-                </div>
-            </section>
-
-            <section class="space-y-4">
-                <h2 class="border-l-4 border-indigo-500 pl-2 font-bold">聯絡人資料 (最少三名)</h2>
-                <div id="contactContainer" class="space-y-4">
-                    <div class="bg-white/5 p-4 rounded-xl space-y-3 relative">
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" placeholder="關係" class="input-box text-sm">
-                            <input type="text" placeholder="姓名" class="input-box text-sm">
-                        </div>
-                        <input type="tel" placeholder="電話" class="input-box text-sm">
-                        <label class="flex items-center gap-2 text-xs text-gray-400">
-                            <input type="checkbox"> 保密不照會
-                        </label>
-                    </div>
-                    <div class="bg-white/5 p-4 rounded-xl space-y-3"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"><input type="tel" placeholder="電話" class="input-box text-sm"><label class="flex items-center gap-2 text-xs text-gray-400"><input type="checkbox"> 保密不照會</label></div>
-                    <div class="bg-white/5 p-4 rounded-xl space-y-3"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"><input type="tel" placeholder="電話" class="input-box text-sm"><label class="flex items-center gap-2 text-xs text-gray-400"><input type="checkbox"> 保密不照會</label></div>
-                </div>
-                <button onclick="addContact()" class="w-full border border-dashed border-white/20 py-2 rounded-xl text-sm">+ 新增聯絡人</button>
-            </section>
-
-            <section class="space-y-4">
-                <h2 class="border-l-4 border-indigo-500 pl-2 font-bold">證件上傳</h2>
-                <div class="grid grid-cols-2 gap-3 text-[10px] text-gray-400">
-                    <div class="upload-area">身分證正面</div>
-                    <div class="upload-area">身分證反面</div>
-                    <div class="upload-area">第二證件<br>(健保卡/駕照)</div>
-                    <div class="upload-area">銀行存摺封面</div>
-                    <div class="upload-area col-span-2">職業證件 (學生證/軍人證/工作證)</div>
-                </div>
-            </section>
-
-            <section class="space-y-4">
-                <h2 class="border-l-4 border-pink-500 pl-2 font-bold text-pink-400">身分認證 (KYC)</h2>
-                <div class="bg-black/40 p-4 rounded-xl text-xs leading-relaxed text-gray-300">
-                    <p class="font-bold text-white mb-2">手持自拍範例：</p>
-                    本人 王大明<br>於 2025/03/22<br>申請為 JOJOPAY 會員<br>
-                    <span class="text-indigo-300">※ 右手持身分證，左手持寫好的紙自拍</span>
-                </div>
-                <div class="upload-area py-10 border-pink-500/50">點擊上傳 KYC 自拍照</div>
-            </section>
-
-            <button onclick="submitForm()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold text-lg shadow-lg">送出申請</button>
-        </div>
-    </div>
-
-    <script>
-        function sendCode() {
-            const phone = document.getElementById('phone').value;
-            if(!phone) return alert("請輸入手機號碼");
-            document.getElementById('verifyDiv').classList.remove('hidden');
-            alert("驗證碼已發送至 " + phone + " (測試期預設: 1234)");
-        }
-
-        function addContact() {
-            const container = document.getElementById('contactContainer');
-            const newField = document.createElement('div');
-            newField.className = "bg-white/5 p-4 rounded-xl space-y-3 animate-in fade-in duration-300";
-            newField.innerHTML = `
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="關係" class="input-box text-sm">
-                    <input type="text" placeholder="姓名" class="input-box text-sm">
-                </div>
-                <input type="tel" placeholder="電話" class="input-box text-sm">
-                <label class="flex items-center gap-2 text-xs text-gray-400">
-                    <input type="checkbox"> 保密不照會
-                </label>
-            `;
-            container.appendChild(newField);
-        }
-
-        function submitForm() {
-            const code = document.getElementById('verifyCode').value;
-            if(code !== "1234") {
-                alert("驗證碼錯誤！");
-                return;
-            }
-            alert("申請已送出！即將跳轉至審核進度查詢。");
-            window.location.href = "Admin.html"; // 測試跳轉
-        }
-    </script>
-</body>
-</html>
+        db.ref('users/' + idCard).set(userData).then(() => {
+            alert("申請已送出！請等待審核。");
+            window.location.href = "index.html";
+        });
+    }
+</script>
