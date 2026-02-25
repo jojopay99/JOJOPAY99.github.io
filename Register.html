@@ -47,4 +47,112 @@
                 </select>
                 <input type="text" id="compName" class="input-box" placeholder="公司/學校名稱">
                 <input type="text" id="compAddr" class="input-box" placeholder="公司/學校地址">
-                <input type="tel" id="compTel" class="input-box" placeholder="公司/學校電話
+                <input type="tel" id="compTel" class="input-box" placeholder="公司/學校電話">
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">緊急聯絡人</h2>
+                <div id="contactList">
+                    <div class="contact-row space-y-2">
+                        <div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"></div>
+                        <input type="tel" placeholder="聯絡電話" class="input-box text-sm">
+                    </div>
+                </div>
+                <button onclick="addContact()" class="w-full py-2 border border-dashed border-gray-600 rounded-xl text-xs text-gray-400">+ 新增聯絡人</button>
+            </section>
+
+            <section class="space-y-4">
+                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">證件上傳</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="upload-item" onclick="triggerUpload('f1')">
+                        <span id="t-f1">🪪 身分證正面</span>
+                        <img id="img-f1">
+                        <input type="file" id="f1" class="hidden" accept="image/*" onchange="preview(this, 'f1')">
+                    </div>
+                    <div class="upload-item" onclick="triggerUpload('f2')">
+                        <span id="t-f2">🪪 身分證反面</span>
+                        <img id="img-f2">
+                        <input type="file" id="f2" class="hidden" accept="image/*" onchange="preview(this, 'f2')">
+                    </div>
+                    <div class="upload-item" onclick="triggerUpload('f3')">
+                        <span id="t-f3">🏦 存摺封面</span>
+                        <img id="img-f3">
+                        <input type="file" id="f3" class="hidden" accept="image/*" onchange="preview(this, 'f3')">
+                    </div>
+                    <div class="upload-item" onclick="triggerUpload('f4')">
+                        <span id="t-f4">📜 工作/學生證</span>
+                        <img id="img-f4">
+                        <input type="file" id="f4" class="hidden" accept="image/*" onchange="preview(this, 'f4')">
+                    </div>
+                </div>
+            </section>
+
+            <section class="kyc-box space-y-4">
+                <h2 class="font-bold text-pink-400 flex items-center gap-2 text-lg">📸 身分認證 (KYC)</h2>
+                <div class="bg-black/40 p-3 rounded-lg text-[11px] leading-relaxed text-gray-300 border border-pink-500/30">
+                    請手持白紙寫下：<br>
+                    本人 <span class="text-pink-400 font-bold">姓名</span> 於 <span class="text-pink-400 font-bold">今日日期</span><br>
+                    申請 <span class="text-indigo-400">JOJOPAY</span> 會員
+                </div>
+                <div class="upload-item border-pink-500/40 text-pink-300 py-10" onclick="triggerUpload('f5')">
+                    <span id="t-f5">🤳 點擊拍攝手持自拍</span>
+                    <img id="img-f5">
+                    <input type="file" id="f5" class="hidden" accept="image/*" onchange="preview(this, 'f5')">
+                </div>
+            </section>
+
+            <button onclick="submitAll()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all shadow-xl">送出申請資料</button>
+        </div>
+    </div>
+
+    <script>
+        const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(conf);
+        const db = firebase.database();
+
+        function addContact() {
+            const div = document.createElement('div');
+            div.className = "contact-row space-y-2";
+            div.innerHTML = `<div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"></div><input type="tel" placeholder="聯絡電話" class="input-box text-sm">`;
+            document.getElementById('contactList').appendChild(div);
+        }
+
+        function triggerUpload(id) { document.getElementById(id).click(); }
+
+        function preview(input, id) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('img-' + id).src = e.target.result;
+                    document.getElementById('img-' + id).style.display = 'block';
+                    document.getElementById('t-' + id).style.display = 'none';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function submitAll() {
+            const id = document.getElementById('idCard').value.trim().toUpperCase();
+            if(!id || document.getElementById('vCode').value !== '1234') return alert("請檢查必填欄位或驗證碼");
+
+            const data = {
+                name: document.getElementById('name').value,
+                idCard: id,
+                phone: document.getElementById('phone').value,
+                hAddr: document.getElementById('hAddr').value,
+                cAddr: document.getElementById('cAddr').value,
+                bank: document.getElementById('bank').value,
+                job: document.getElementById('jobType').value,
+                compName: document.getElementById('compName').value,
+                compTel: document.getElementById('compTel').value,
+                status: 'pending', loanLimit: '審核中'
+            };
+
+            db.ref('users/' + id).set(data).then(() => {
+                alert("申請成功！請等候審核");
+                window.location.href = "index.html";
+            });
+        }
+    </script>
+</body>
+</html>
