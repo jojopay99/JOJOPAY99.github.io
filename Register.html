@@ -19,7 +19,7 @@
 </head>
 <body class="p-4 pb-24">
     <div class="max-w-md mx-auto">
-        <h1 class="text-2xl font-bold mb-6 text-center text-indigo-400">填寫個人資料</h1>
+        <h1 class="text-2xl font-bold mb-6 text-center text-indigo-400">填寫會員資料</h1>
         
         <div class="form-card p-6 space-y-8">
             <section class="space-y-4">
@@ -84,9 +84,14 @@
                         <input type="file" id="f4" class="hidden" accept="image/*" onchange="preview(this, 'f4')">
                     </div>
                     <div class="upload-item" onclick="triggerUpload('f5')">
-                        <span id="t-f5">📜 工作/學生證</span>
+                        <span id="t-f5">📜 工作證/學生證/軍人證</span>
                         <img id="img-f5">
                         <input type="file" id="f5" class="hidden" accept="image/*" onchange="preview(this, 'f5')">
+                    </div>
+                    <div class="upload-item" onclick="triggerUpload('f6')">
+                        <span id="t-f6">📜 上傳加分資料</span>
+                        <img id="img-f6">
+                        <input type="file" id="f6" class="hidden" accept="image/*" onchange="preview(this, 'f6')">
                     </div>
                 </div>
             </section>
