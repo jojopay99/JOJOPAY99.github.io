@@ -2,64 +2,138 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>JOJOPAY | 管理後台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOJOPAY | 最高權限審核中心</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body { background: #0a0a14; color: white; font-family: sans-serif; }
+        .admin-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; transition: 0.3s; }
+        .admin-card:hover { border-color: #6366f1; }
+        .data-label { color: #9ca3af; font-size: 12px; margin-right: 5px; }
+        .data-value { color: #e5e7eb; font-weight: 500; }
+        .status-tag { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+        .pending { background: #f59e0b; color: #000; }
+        .approved { background: #10b981; color: #fff; }
+        .rejected { background: #ef4444; color: #fff; }
+    </style>
 </head>
-<body class="bg-gray-900 text-white p-8">
-    <div id="loginBox" class="max-w-sm mx-auto mt-20 p-6 bg-gray-800 rounded-xl">
-        <h2 class="text-xl mb-4 text-center">後台管理登入</h2>
-        <input type="text" id="admU" placeholder="帳號" class="w-full p-2 mb-2 bg-gray-700 rounded">
-        <input type="password" id="admP" placeholder="密碼" class="w-full p-2 mb-4 bg-gray-700 rounded">
-        <button onclick="adminLogin()" class="w-full bg-indigo-600 py-2 rounded">登入</button>
+<body class="p-4 md:p-8">
+
+    <div id="loginOverlay" class="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <div class="bg-gray-900 p-8 rounded-3xl w-full max-w-sm border border-white/10">
+            <h2 class="text-2xl font-bold mb-6 text-center text-indigo-400">管理員登入</h2>
+            <div class="space-y-4">
+                <input type="text" id="admU" placeholder="管理員帳號" class="w-full p-4 bg-white/5 rounded-xl outline-none border border-white/10 focus:border-indigo-500">
+                <input type="password" id="admP" placeholder="管理員密碼" class="w-full p-4 bg-white/5 rounded-xl outline-none border border-white/10 focus:border-indigo-500">
+                <button onclick="checkAuth()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold text-lg hover:bg-indigo-500 transition-all">登入系統</button>
+            </div>
+        </div>
     </div>
 
-    <div id="adminPanel" class="hidden">
-        <h1 class="text-2xl font-bold mb-6">待審核名單</h1>
-        <div id="userList" class="space-y-4"></div>
+    <div id="mainContent" class="hidden">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-indigo-400 tracking-tight">JOJOPAY 審核中心</h1>
+            <button onclick="location.reload()" class="text-sm bg-white/5 px-4 py-2 rounded-lg border border-white/10">重新整理資料</button>
+        </header>
+
+        <div id="userContainer" class="grid gap-6">
+            <div class="text-center py-20 text-gray-500">正在同步雲端資料庫...</div>
+        </div>
     </div>
 
     <script>
-        const firebaseConfig = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(firebaseConfig);
+        // Firebase 配置
+        const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(conf);
         const db = firebase.database();
 
-        function adminLogin() {
+        function checkAuth() {
             if(document.getElementById('admU').value === 'jojo' && document.getElementById('admP').value === '0895') {
-                document.getElementById('loginBox').style.display='none';
-                document.getElementById('adminPanel').classList.remove('hidden');
-                loadData();
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainContent').classList.remove('hidden');
+                fetchUsers();
+            } else {
+                alert("權限不足！");
             }
         }
 
-        function loadData() {
+        function fetchUsers() {
             db.ref('users').on('value', (snapshot) => {
-                const data = snapshot.val();
-                let html = '';
-                for(let id in data) {
-                    const u = data[id];
-                    html += `
-                        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center">
-                            <div>
-                                <p class="font-bold">${u.name} - ${u.idCard}</p>
-                                <p class="text-sm text-gray-400">電話: ${u.phone} | 狀態: ${u.status}</p>
-                            </div>
-                            <div class="flex gap-2">
-                                <input type="text" placeholder="額度" id="limit-${id}" value="${u.loanLimit}" class="bg-gray-700 w-24 p-1 rounded">
-                                <button onclick="update('${id}', 'approved')" class="bg-green-600 px-3 py-1 rounded text-xs">通過</button>
-                                <button onclick="update('${id}', 'rejected')" class="bg-red-600 px-3 py-1 rounded text-xs">拒絕</button>
-                            </div>
-                        </div>`;
+                const users = snapshot.val();
+                const container = document.getElementById('userContainer');
+                container.innerHTML = '';
+
+                if (!users) {
+                    container.innerHTML = '<div class="text-center py-20 text-gray-500">目前尚無註冊資料</div>';
+                    return;
                 }
-                document.getElementById('userList').innerHTML = html;
+
+                for (let id in users) {
+                    const u = users[id];
+                    container.innerHTML += `
+                        <div class="admin-card p-6">
+                            <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
+                                <div>
+                                    <span class="status-tag ${u.status}">${u.status.toUpperCase()}</span>
+                                    <h3 class="text-2xl font-bold mt-2 text-white">${u.name || '未填'}</h3>
+                                    <p class="text-sm text-indigo-300 font-mono">${u.idCard}</p>
+                                </div>
+                                <div class="flex flex-col items-end gap-2">
+                                    <div class="flex gap-2">
+                                        <input type="text" id="limit-${id}" value="${u.loanLimit || ''}" placeholder="設定額度" 
+                                            class="w-24 bg-white/10 p-2 rounded-lg text-xs border border-white/10 text-center focus:border-indigo-500 outline-none">
+                                        <button onclick="updateUser('${id}', 'approved')" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-xs font-bold transition-all">通過</button>
+                                        <button onclick="updateUser('${id}', 'rejected')" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-xs font-bold transition-all">拒絕</button>
+                                    </div>
+                                    <button onclick="deleteUser('${id}')" class="text-[10px] text-gray-600 hover:text-red-400">刪除此申請紀錄</button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm border-t border-white/5 pt-6">
+                                <div class="space-y-2">
+                                    <p class="font-bold text-indigo-400 mb-2">聯絡與地址</p>
+                                    <div><span class="data-label">手機:</span><span class="data-value">${u.phone || '無'}</span></div>
+                                    <div><span class="data-label">銀行:</span><span class="data-value">${u.bank || '未填'}</span></div>
+                                    <div><span class="data-label">戶籍:</span><span class="data-value text-xs">${u.hAddr || '未填'}</span></div>
+                                    <div><span class="data-label">現居:</span><span class="data-value text-xs">${u.cAddr || '未填'}</span></div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <p class="font-bold text-indigo-400 mb-2">職業背景</p>
+                                    <div><span class="data-label">類型:</span><span class="data-value">${u.job || '未填'}</span></div>
+                                    <div><span class="data-label">單位:</span><span class="data-value">${u.compName || '未填'}</span></div>
+                                    <div><span class="data-label">電話:</span><span class="data-value">${u.compTel || '未填'}</span></div>
+                                </div>
+
+                                <div class="space-y-2 bg-white/5 p-3 rounded-xl">
+                                    <p class="font-bold text-pink-400 mb-2">緊急聯絡人</p>
+                                    <div class="text-[11px] text-gray-300 leading-relaxed">
+                                        ${u.contacts ? u.contacts : '未填寫或資料格式有誤'}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p class="mt-4 text-[10px] text-gray-600 text-right italic">申請時間紀錄: ${new Date().toLocaleDateString()}</p>
+                        </div>
+                    `;
+                }
             });
         }
 
-        function update(id, status) {
-            const limit = document.getElementById('limit-'+id).value;
-            db.ref('users/'+id).update({ status: status, loanLimit: limit });
-            alert("已更新");
+        function updateUser(id, status) {
+            const limit = document.getElementById('limit-' + id).value;
+            db.ref('users/' + id).update({
+                status: status,
+                loanLimit: limit || '0'
+            }).then(() => alert('已成功將 [' + id + '] 狀態更新為: ' + status));
+        }
+
+        function deleteUser(id) {
+            if(confirm('確定要永久刪除此客戶資料嗎？')) {
+                db.ref('users/' + id).remove();
+            }
         }
     </script>
 </body>
