@@ -2,138 +2,91 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOJOPAY | 最高權限審核中心</title>
+    <title>JOJOPAY | 高級管理後台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>
-        body { background: #0a0a14; color: white; font-family: sans-serif; }
-        .admin-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; transition: 0.3s; }
-        .admin-card:hover { border-color: #6366f1; }
-        .data-label { color: #9ca3af; font-size: 12px; margin-right: 5px; }
-        .data-value { color: #e5e7eb; font-weight: 500; }
-        .status-tag { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
-        .pending { background: #f59e0b; color: #000; }
-        .approved { background: #10b981; color: #fff; }
-        .rejected { background: #ef4444; color: #fff; }
-    </style>
 </head>
-<body class="p-4 md:p-8">
-
-    <div id="loginOverlay" class="fixed inset-0 bg-black z-50 flex items-center justify-center">
-        <div class="bg-gray-900 p-8 rounded-3xl w-full max-w-sm border border-white/10">
-            <h2 class="text-2xl font-bold mb-6 text-center text-indigo-400">管理員登入</h2>
-            <div class="space-y-4">
-                <input type="text" id="admU" placeholder="管理員帳號" class="w-full p-4 bg-white/5 rounded-xl outline-none border border-white/10 focus:border-indigo-500">
-                <input type="password" id="admP" placeholder="管理員密碼" class="w-full p-4 bg-white/5 rounded-xl outline-none border border-white/10 focus:border-indigo-500">
-                <button onclick="checkAuth()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold text-lg hover:bg-indigo-500 transition-all">登入系統</button>
-            </div>
-        </div>
+<body class="bg-gray-900 text-white p-4 md:p-8">
+    <div id="loginBox" class="max-w-sm mx-auto mt-20 p-6 bg-gray-800 rounded-xl border border-gray-700">
+        <h2 class="text-xl mb-4 text-center font-bold text-indigo-400">管理員驗證</h2>
+        <input type="password" id="admP" placeholder="請輸入管理密碼" class="w-full p-3 mb-4 bg-gray-700 rounded-lg outline-none">
+        <button onclick="adminLogin()" class="w-full bg-indigo-600 py-3 rounded-lg font-bold">進入系統</button>
     </div>
 
-    <div id="mainContent" class="hidden">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold text-indigo-400 tracking-tight">JOJOPAY 審核中心</h1>
-            <button onclick="location.reload()" class="text-sm bg-white/5 px-4 py-2 rounded-lg border border-white/10">重新整理資料</button>
-        </header>
-
-        <div id="userContainer" class="grid gap-6">
-            <div class="text-center py-20 text-gray-500">正在同步雲端資料庫...</div>
+    <div id="adminPanel" class="hidden max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-indigo-400">待審核申請名單</h1>
+            <button onclick="location.reload()" class="text-xs bg-gray-700 px-3 py-1 rounded">刷新數據</button>
         </div>
+        
+        <div id="userList" class="space-y-6">
+            </div>
     </div>
 
     <script>
-        // Firebase 配置
         const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(conf);
         const db = firebase.database();
 
-        function checkAuth() {
-            if(document.getElementById('admU').value === 'jojo' && document.getElementById('admP').value === '0895') {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainContent').classList.remove('hidden');
-                fetchUsers();
-            } else {
-                alert("權限不足！");
-            }
+        function adminLogin() {
+            if(document.getElementById('admP').value === '0895') {
+                document.getElementById('loginBox').classList.add('hidden');
+                document.getElementById('adminPanel').classList.remove('hidden');
+                loadUsers();
+            } else { alert("密碼錯誤"); }
         }
 
-        function fetchUsers() {
+        function loadUsers() {
             db.ref('users').on('value', (snapshot) => {
                 const users = snapshot.val();
-                const container = document.getElementById('userContainer');
-                container.innerHTML = '';
-
-                if (!users) {
-                    container.innerHTML = '<div class="text-center py-20 text-gray-500">目前尚無註冊資料</div>';
-                    return;
-                }
-
-                for (let id in users) {
+                let html = '';
+                for(let id in users) {
                     const u = users[id];
-                    container.innerHTML += `
-                        <div class="admin-card p-6">
-                            <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
+                    html += `
+                    <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <p class="text-lg font-bold text-indigo-300 border-b border-gray-700 pb-1">${u.name || '未填'} (${id})</p>
+                                <div class="text-sm grid grid-cols-2 gap-2 text-gray-400">
+                                    <p>電話: <span class="text-white">${u.phone}</span></p>
+                                    <p>職業: <span class="text-white">${u.job}</span></p>
+                                    <p class="col-span-2">戶籍: <span class="text-white">${u.hAddr}</span></p>
+                                    <p class="col-span-2">現居: <span class="text-white">${u.cAddr}</span></p>
+                                    <p>公司: <span class="text-white">${u.compName}</span></p>
+                                    <p>公司電話: <span class="text-white">${u.compTel}</span></p>
+                                    <p class="col-span-2 text-yellow-500 font-bold">收款銀行: ${u.bank}</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-black/20 p-4 rounded-xl space-y-4">
                                 <div>
-                                    <span class="status-tag ${u.status}">${u.status.toUpperCase()}</span>
-                                    <h3 class="text-2xl font-bold mt-2 text-white">${u.name || '未填'}</h3>
-                                    <p class="text-sm text-indigo-300 font-mono">${u.idCard}</p>
+                                    <label class="text-xs text-gray-500">設定預估額度 (會顯示在會員中心)</label>
+                                    <input type="number" id="limit-${id}" value="${u.loanLimit === '審核中' ? '' : u.loanLimit}" 
+                                           placeholder="例如: 50000" class="w-full p-2 bg-gray-700 rounded mt-1 text-green-400 font-bold">
                                 </div>
-                                <div class="flex flex-col items-end gap-2">
-                                    <div class="flex gap-2">
-                                        <input type="text" id="limit-${id}" value="${u.loanLimit || ''}" placeholder="設定額度" 
-                                            class="w-24 bg-white/10 p-2 rounded-lg text-xs border border-white/10 text-center focus:border-indigo-500 outline-none">
-                                        <button onclick="updateUser('${id}', 'approved')" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-xs font-bold transition-all">通過</button>
-                                        <button onclick="updateUser('${id}', 'rejected')" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-xs font-bold transition-all">拒絕</button>
-                                    </div>
-                                    <button onclick="deleteUser('${id}')" class="text-[10px] text-gray-600 hover:text-red-400">刪除此申請紀錄</button>
+                                <div class="flex gap-2">
+                                    <button onclick="updateStatus('${id}', 'approved')" class="flex-1 bg-green-600 py-2 rounded font-bold">核准通過</button>
+                                    <button onclick="updateStatus('${id}', 'rejected')" class="flex-1 bg-red-600 py-2 rounded font-bold">拒絕申請</button>
                                 </div>
+                                <p class="text-center text-xs text-gray-500">當前狀態: <span class="text-indigo-400">${u.status}</span></p>
                             </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-sm border-t border-white/5 pt-6">
-                                <div class="space-y-2">
-                                    <p class="font-bold text-indigo-400 mb-2">聯絡與地址</p>
-                                    <div><span class="data-label">手機:</span><span class="data-value">${u.phone || '無'}</span></div>
-                                    <div><span class="data-label">銀行:</span><span class="data-value">${u.bank || '未填'}</span></div>
-                                    <div><span class="data-label">戶籍:</span><span class="data-value text-xs">${u.hAddr || '未填'}</span></div>
-                                    <div><span class="data-label">現居:</span><span class="data-value text-xs">${u.cAddr || '未填'}</span></div>
-                                </div>
-
-                                <div class="space-y-2">
-                                    <p class="font-bold text-indigo-400 mb-2">職業背景</p>
-                                    <div><span class="data-label">類型:</span><span class="data-value">${u.job || '未填'}</span></div>
-                                    <div><span class="data-label">單位:</span><span class="data-value">${u.compName || '未填'}</span></div>
-                                    <div><span class="data-label">電話:</span><span class="data-value">${u.compTel || '未填'}</span></div>
-                                </div>
-
-                                <div class="space-y-2 bg-white/5 p-3 rounded-xl">
-                                    <p class="font-bold text-pink-400 mb-2">緊急聯絡人</p>
-                                    <div class="text-[11px] text-gray-300 leading-relaxed">
-                                        ${u.contacts ? u.contacts : '未填寫或資料格式有誤'}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <p class="mt-4 text-[10px] text-gray-600 text-right italic">申請時間紀錄: ${new Date().toLocaleDateString()}</p>
                         </div>
-                    `;
+                        <p class="mt-4 text-xs text-gray-500 italic">註：照片上傳功能因 GitHub 環境限制，後台目前優先讀取文字。如需看圖，請確認 Firebase Storage 已開啟。</p>
+                    </div>`;
                 }
+                document.getElementById('userList').innerHTML = html || '<p class="text-center">目前沒有申請資料</p>';
             });
         }
 
-        function updateUser(id, status) {
+        function updateStatus(id, status) {
             const limit = document.getElementById('limit-' + id).value;
+            if(!limit && status === 'approved') return alert("請先填寫預估額度");
+            
             db.ref('users/' + id).update({
                 status: status,
-                loanLimit: limit || '0'
-            }).then(() => alert('已成功將 [' + id + '] 狀態更新為: ' + status));
-        }
-
-        function deleteUser(id) {
-            if(confirm('確定要永久刪除此客戶資料嗎？')) {
-                db.ref('users/' + id).remove();
-            }
+                loanLimit: limit || '尚未評估'
+            }).then(() => alert("更新成功！使用者已可看到結果。"));
         }
     </script>
 </body>
