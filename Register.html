@@ -3,43 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOJOPAY | 會員註冊</title>
+    <title>JOJOPAY | 快速註冊</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        body { background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%); color: white; font-family: sans-serif; }
+        body { background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%); color: white; }
         .form-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .input-box { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; padding: 12px; border-radius: 12px; margin-top: 4px; color: white; outline: none; }
-        .upload-slot { border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 15px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; }
-        .upload-slot:hover { border-color: #6366f1; background: rgba(99, 102, 241, 0.05); }
+        
+        /* 證件格樣式 */
+        .upload-grid-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 16 / 10;
+            transition: all 0.3s;
+        }
+        .upload-grid-item:hover { border-color: #6366f1; background: rgba(99, 102, 241, 0.05); }
+        .upload-icon { font-size: 24px; margin-bottom: 4px; opacity: 0.6; }
+        .upload-text { font-size: 11px; color: #9ca3af; }
+
+        /* KYC 粉紅區 */
+        .kyc-section {
+            background: rgba(236, 72, 153, 0.05);
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+        }
     </style>
 </head>
-<body class="p-4 pb-20">
+<body class="p-4 pb-24">
     <div class="max-w-md mx-auto">
         <h1 class="text-2xl font-bold mb-6 text-center text-indigo-400">填寫個人資料</h1>
-        
-        <div class="form-card rounded-3xl p-6 space-y-8">
-            <section class="space-y-4">
-                <h2 class="text-indigo-300 font-bold border-l-4 border-indigo-500 pl-2">基本資料</h2>
-                <div><label class="text-xs text-gray-400">姓名</label><input type="text" id="name" class="input-box" placeholder="請輸入全名"></div>
-                <div><label class="text-xs text-gray-400">生日</label><input type="date" id="birthday" class="input-box"></div>
-                <div><label class="text-xs text-gray-400">身分證字號</label><input type="text" id="idCard" class="input-box" placeholder="A123456789"></div>
-                <div class="flex gap-2 items-end">
-                    <div class="flex-1"><label class="text-xs text-gray-400">手機號碼</label><input type="tel" id="phone" class="input-box" placeholder="0912345678"></div>
-                    <button onclick="alert('驗證碼已發送至您的手機')" class="bg-indigo-600 px-3 py-3 rounded-xl text-xs font-bold h-[48px]">獲取驗證碼</button>
-                </div>
-                <div><label class="text-xs text-gray-400">驗證碼 (測試期間請輸入1234)</label><input type="text" id="vCode" class="input-box" placeholder="請輸入1234"></div>
-                <div><label class="text-xs text-gray-400">戶籍地址</label><input type="text" id="hAddr" class="input-box"></div>
-                <div><label class="text-xs text-gray-400">現居地址</label><input type="text" id="cAddr" class="input-box"></div>
-                <div><label class="text-xs text-gray-400">職業 / 公司名稱</label><input type="text" id="job" class="input-box" placeholder="例如: 學生 / 某某貿易公司"></div>
-                <div><label class="text-xs text-gray-400">撥款帳戶</label><input type="text" id="bank" class="input-box" placeholder="戶名 + 銀行代碼 + 帳號"></div>
-            </section>
 
+        <div class="form-card rounded-[32px] p-6 space-y-8">
+            
             <section class="space-y-4">
-                <h2 class="text-indigo-300 font-bold border-l-4 border-indigo-500 pl-2">聯絡人 (最少三名)</h2>
-                <div id="contactGroup" class="space-y-3">
-                    <div class="bg-white/5 p-3 rounded-xl space-y-2"><div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"></div><input type="tel" placeholder="電話" class="input-box text-sm"><label class="text-[10px] text-gray-500 flex items-center gap-1"><input type="checkbox">保密不照會</label></div>
-                    <div class="bg-white/5 p-3 rounded-xl space-y-2"><div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"></div><input type="tel" placeholder="電話" class="input-box text-sm"><label class="text-[10px] text-gray-500 flex items-center gap-1"><input type="checkbox">保密不照會</label></div>
-                    <div class="bg-white/5 p-3 rounded-xl space-y-2"><div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box
-                                                                                                                                                               
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="w-1 h-5 bg-indigo-500 rounded-full"></div>
+                    <h2 class="font-bold text-lg">基本資料</h2>
+                </div>
+                <div><label class="text-xs text-gray-500 ml-1">姓名</label><input type="text" id="name" class="input-box" placeholder="請輸入真實姓名"></div>
+                <div><label class="text-xs text-gray-500 ml-1">身分證字號</label><input type="text" id="idCard" class="input-box" placeholder="例如: A123456789"></div>
+                <div><label class="text-xs text-gray-400">手機號碼</label>
+                    <div class="flex gap-2">
+                        <input type="tel" id="phone" class="input-box" placeholder="0912-345-678">
+                        <button onclick="alert('驗證碼已發送')" class="bg-indigo-600 px-4 rounded-xl text-xs font-bold mt-1">發送</button>
+                    </div>
+                </div>
+                <div><label class="text-xs text-gray-500 ml-1">驗證碼 (預設1234)</label><input type="text" id="vCode" class="input-
