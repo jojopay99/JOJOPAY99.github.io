@@ -3,87 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOJOPAY | 你的資金管家</title>
+    <title>JOJOPAY | 會員登入</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             background-color: #0d0d1a;
-            /* 仿截圖中的深紫色徑向漸層 */
             background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%);
             color: white;
             font-family: -apple-system, "Microsoft JhengHei", sans-serif;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .glass-card {
+        .login-card {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .action-btn {
-            background: #6366f1; /* 亮紫色按鈕 */
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        .input-field {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .login-btn {
+            background: #6366f1;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
     </style>
 </head>
-<body class="flex flex-col items-center">
+<body class="items-center justify-between">
 
-    <header class="w-full flex justify-between items-center p-6 max-w-md">
-        <div class="flex items-center gap-2">
-            <div class="bg-yellow-500 p-1 rounded-full text-black font-bold text-[10px] w-5 h-5 flex items-center justify-center">$</div>
-            <span class="text-xl font-bold tracking-tight">JOJOPAY</span>
-        </div>
-        <div class="glass-card px-4 py-1.5 rounded-full text-sm flex items-center gap-2 text-gray-300">
-            👤 會員中心
-        </div>
-    </header>
+    <div class="mt-20 text-center">
+        <h1 class="text-3xl font-bold tracking-widest text-indigo-400">JoJoPAY</h1>
+    </div>
 
-    <main class="flex-1 w-full max-w-md px-8 pt-10 text-center flex flex-col items-center">
-        
-        <div class="bg-indigo-900/30 text-indigo-300 text-xs px-5 py-1.5 rounded-full border border-indigo-500/20 mb-8">
-            學生・年輕人首選
-        </div>
+    <main class="w-full max-w-sm px-6">
+        <div class="login-card rounded-3xl p-8 shadow-2xl">
+            <h2 class="text-center text-xl font-bold mb-8 tracking-widest">會員登入</h2>
+            
+            <form class="space-y-6">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-2 ml-1">身分證字號</label>
+                    <input type="text" placeholder="帳號" 
+                        class="input-field w-full py-4 px-4 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600">
+                </div>
 
-        <h1 class="text-4xl font-bold mb-3 tracking-wide">資金需求？</h1>
-        <h2 class="text-4xl font-bold mb-10 text-white/90">JOJOPAY 幫你搞定</h2>
-        
-        <p class="text-gray-400 text-sm leading-relaxed mb-12">
-            簡單、快速、安全，線上申請 3 分鐘完成，<br>最快當日撥款
-        </p>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-2 ml-1">密碼 (手機號碼)</label>
+                    <input type="password" placeholder="密碼" 
+                        class="input-field w-full py-4 px-4 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600">
+                </div>
 
-        <div class="grid grid-cols-2 gap-4 w-full mb-12">
-            <div class="glass-card p-5 rounded-2xl flex flex-col items-center justify-center gap-2">
-                <span class="text-yellow-400 text-xl">⚡</span>
-                <span class="text-sm font-medium">線上申請</span>
-            </div>
-            <div class="glass-card p-5 rounded-2xl flex flex-col items-center justify-center gap-2">
-                <span class="text-blue-400 text-xl">✓</span>
-                <span class="text-sm font-medium">快速審核</span>
-            </div>
-            <div class="glass-card p-5 rounded-2xl flex items-center justify-center gap-3 col-span-2">
-                <span class="text-2xl">📅</span>
-                <span class="text-sm font-medium text-white/80">彈性還款</span>
-            </div>
-        </div>
+                <button type="button" class="login-btn w-full py-4 rounded-xl font-bold text-lg mt-4 active:scale-95 transition-transform">
+                    立即登入
+                </button>
+            </form>
 
-        <button class="action-btn w-full py-4 rounded-2xl text-lg font-bold flex items-center justify-center gap-2 mb-16 active:scale-95 transition-transform">
-            立即取得資金 <span class="text-xl">→</span>
-        </button>
-
-        <div class="grid grid-cols-3 w-full border-t border-white/10 pt-10 pb-10">
-            <div class="flex flex-col items-center">
-                <span class="text-2xl font-bold text-white">10,000+</span>
-                <span class="text-xs text-gray-500 mt-1">服務人次</span>
-            </div>
-            <div class="flex flex-col items-center border-x border-white/5">
-                <span class="text-2xl font-bold text-white">98%</span>
-                <span class="text-xs text-gray-500 mt-1">滿意度</span>
-            </div>
-            <div class="flex flex-col items-center">
-                <span class="text-2xl font-bold text-white">24hr</span>
-                <span class="text-xs text-gray-500 mt-1">快速撥款</span>
+            <div class="flex justify-between mt-8 px-2">
+                <a href="#" class="text-indigo-400 text-sm">註冊新會員</a>
+                <a href="#" class="text-gray-500 text-sm">忘記密碼？</a>
             </div>
         </div>
     </main>
+
+    <footer class="w-full max-w-md px-6 pb-12">
+        <div class="grid grid-cols-3 w-full border-t border-white/10 pt-10">
+            <div class="flex flex-col items-center">
+                <span class="text-xl font-bold text-white">10,000+</span>
+                <span class="text-[10px] text-gray-500 mt-1">服務人次</span>
+            </div>
+            <div class="flex flex-col items-center border-x border-white/5">
+                <span class="text-xl font-bold text-white">99%</span>
+                <span class="text-[10px] text-gray-500 mt-1">快速撥款</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="text-xl font-bold text-white">24hr</span>
+                <span class="text-[10px] text-gray-500 mt-1">線上審核</span>
+            </div>
+        </div>
+    </footer>
 
 </body>
 </html>
