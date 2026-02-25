@@ -8,6 +8,7 @@
     <style>
         body {
             background-color: #0d0d1a;
+            /* 仿通通借深紫色徑向漸層 */
             background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%);
             color: white;
             font-family: -apple-system, "Microsoft JhengHei", sans-serif;
@@ -43,13 +44,13 @@
             <form class="space-y-6">
                 <div>
                     <label class="block text-xs text-gray-400 mb-2 ml-1">身分證字號</label>
-                    <input type="text" id="userId" placeholder="帳號" 
+                    <input type="text" id="userId" placeholder="請輸入身分證字號" 
                         class="input-field w-full py-4 px-4 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600">
                 </div>
 
                 <div>
                     <label class="block text-xs text-gray-400 mb-2 ml-1">密碼 (手機號碼)</label>
-                    <input type="password" id="userPw" placeholder="密碼" 
+                    <input type="password" id="userPw" placeholder="請輸入密碼" 
                         class="input-field w-full py-4 px-4 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600">
                 </div>
 
@@ -69,38 +70,41 @@
         <div class="grid grid-cols-3 w-full border-t border-white/10 pt-10">
             <div class="flex flex-col items-center">
                 <span class="text-xl font-bold text-white">10,000+</span>
-                <span class="text-[10px] text-gray-500 mt-1">服務人次</span>
+                <span class="text-[10px] text-gray-500 mt-1 text-center">服務人次</span>
             </div>
             <div class="flex flex-col items-center border-x border-white/5">
                 <span class="text-xl font-bold text-white">99%</span>
-                <span class="text-[10px] text-gray-500 mt-1">快速撥款</span>
+                <span class="text-[10px] text-gray-500 mt-1 text-center">快速撥款</span>
             </div>
             <div class="flex flex-col items-center">
                 <span class="text-xl font-bold text-white">24hr</span>
-                <span class="text-[10px] text-gray-500 mt-1">線上審核</span>
+                <span class="text-[10px] text-gray-500 mt-1 text-center">線上審核</span>
             </div>
         </div>
     </footer>
 
     <script>
         function login() {
-            // 抓取輸入框內容（雖然目前是模擬，但先寫好預留）
             const id = document.getElementById('userId').value;
             const pw = document.getElementById('userPw').value;
 
+            // 基本防呆
             if (!id || !pw) {
-                alert("請輸入身分證字號及密碼");
+                alert("請填寫身分證字號及密碼！");
                 return;
             }
 
-            // --- 狀態控制區 ---
-            // 測試方法：你可以手動把下面這行改為 'approved' 或 'rejected' 來測試結果
+            // --- 審核狀態邏輯 ---
+            // 'pending' = 審核中 (預設)
+            // 'approved' = 通過 (會跳轉至 Member.html)
+            // 'rejected' = 取消
+            
+            // 測試提示：你可以手動將下面這行改成 'approved' 來測試進入會員中心
             const userStatus = 'pending'; 
 
             if (userStatus === 'pending') {
                 alert("您的會員資格還在審核中，請耐心等候，或連繫客服人員諮詢。");
             } else if (userStatus === 'approved') {
-                // 跳轉到會員中心
                 window.location.href = "Member.html";
             } else if (userStatus === 'rejected') {
                 alert("您的貸款申請已被取消，請連繫客服了解詳情。");
