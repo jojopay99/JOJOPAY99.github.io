@@ -51,7 +51,7 @@
             </section>
 
             <section class="space-y-4">
-                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">緊急聯絡人</h2>
+                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">聯絡人(最少3位)</h2>
                 <div id="contactList">
                     <div class="contact-row space-y-2">
                         <div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"></div>
@@ -73,16 +73,20 @@
                         <span id="t-f2">🪪 身分證反面</span>
                         <img id="img-f2">
                         <input type="file" id="f2" class="hidden" accept="image/*" onchange="preview(this, 'f2')">
-                    </div>
-                    <div class="upload-item" onclick="triggerUpload('f3')">
-                        <span id="t-f3">🏦 存摺封面</span>
+                    </div>                    <div class="upload-item" onclick="triggerUpload('f2')">
+                        <span id="t-f3">🪪 健保卡</span>
                         <img id="img-f3">
                         <input type="file" id="f3" class="hidden" accept="image/*" onchange="preview(this, 'f3')">
                     </div>
                     <div class="upload-item" onclick="triggerUpload('f4')">
-                        <span id="t-f4">📜 工作/學生證</span>
+                        <span id="t-f4">🏦 存摺封面</span>
                         <img id="img-f4">
                         <input type="file" id="f4" class="hidden" accept="image/*" onchange="preview(this, 'f4')">
+                    </div>
+                    <div class="upload-item" onclick="triggerUpload('f5')">
+                        <span id="t-f5">📜 工作/學生證</span>
+                        <img id="img-f5">
+                        <input type="file" id="f5" class="hidden" accept="image/*" onchange="preview(this, 'f5')">
                     </div>
                 </div>
             </section>
