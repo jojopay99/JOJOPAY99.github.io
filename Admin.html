@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>JOJOPAY | 管理後台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <div id="loginBox" class="max-w-sm mx-auto mt-20 p-6 bg-gray-800 rounded-xl">
+        <h2 class="text-xl mb-4 text-center">後台管理登入</h2>
+        <input type="text" id="admU" placeholder="帳號" class="w-full p-2 mb-2 bg-gray-700 rounded">
+        <input type="password" id="admP" placeholder="密碼" class="w-full p-2 mb-4 bg-gray-700 rounded">
+        <button onclick="adminLogin()" class="w-full bg-indigo-600 py-2 rounded">登入</button>
+    </div>
+
+    <div id="adminPanel" class="hidden">
+        <h1 class="text-2xl font-bold mb-6">待審核名單</h1>
+        <div id="userList" class="space-y-4"></div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function adminLogin() {
+            if(document.getElementById('admU').value === 'jojo' && document.getElementById('admP').value === '0895') {
+                document.getElementById('loginBox').style.display='none';
+                document.getElementById('adminPanel').classList.remove('hidden');
+                loadData();
+            }
+        }
+
+        function loadData() {
+            db.ref('users').on('value', (snapshot) => {
+                const data = snapshot.val();
+                let html = '';
+                for(let id in data) {
+                    const u = data[id];
+                    html += `
+                        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center">
+                            <div>
+                                <p class="font-bold">${u.name} - ${u.idCard}</p>
+                                <p class="text-sm text-gray-400">電話: ${u.phone} | 狀態: ${u.status}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="text" placeholder="額度" id="limit-${id}" value="${u.loanLimit}" class="bg-gray-700 w-24 p-1 rounded">
+                                <button onclick="update('${id}', 'approved')" class="bg-green-600 px-3 py-1 rounded text-xs">通過</button>
+                                <button onclick="update('${id}', 'rejected')" class="bg-red-600 px-3 py-1 rounded text-xs">拒絕</button>
+                            </div>
+                        </div>`;
+                }
+                document.getElementById('userList').innerHTML = html;
+            });
+        }
+
+        function update(id, status) {
+            const limit = document.getElementById('limit-'+id).value;
+            db.ref('users/'+id).update({ status: status, loanLimit: limit });
+            alert("已更新");
+        }
+    </script>
+</body>
+</html>
