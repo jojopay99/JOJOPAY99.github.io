@@ -43,17 +43,17 @@
             <form class="space-y-6">
                 <div>
                     <label class="block text-xs text-gray-400 mb-2 ml-1">身分證字號</label>
-                    <input type="text" placeholder="帳號" 
+                    <input type="text" id="userId" placeholder="帳號" 
                         class="input-field w-full py-4 px-4 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600">
                 </div>
 
                 <div>
                     <label class="block text-xs text-gray-400 mb-2 ml-1">密碼 (手機號碼)</label>
-                    <input type="password" placeholder="密碼" 
+                    <input type="password" id="userPw" placeholder="密碼" 
                         class="input-field w-full py-4 px-4 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white placeholder-gray-600">
                 </div>
 
-                <button type="button" class="login-btn w-full py-4 rounded-xl font-bold text-lg mt-4 active:scale-95 transition-transform">
+                <button type="button" onclick="login()" class="login-btn w-full py-4 rounded-xl font-bold text-lg mt-4 active:scale-95 transition-transform">
                     立即登入
                 </button>
             </form>
@@ -82,5 +82,30 @@
         </div>
     </footer>
 
+    <script>
+        function login() {
+            // 抓取輸入框內容（雖然目前是模擬，但先寫好預留）
+            const id = document.getElementById('userId').value;
+            const pw = document.getElementById('userPw').value;
+
+            if (!id || !pw) {
+                alert("請輸入身分證字號及密碼");
+                return;
+            }
+
+            // --- 狀態控制區 ---
+            // 測試方法：你可以手動把下面這行改為 'approved' 或 'rejected' 來測試結果
+            const userStatus = 'pending'; 
+
+            if (userStatus === 'pending') {
+                alert("您的會員資格還在審核中，請耐心等候，或連繫客服人員諮詢。");
+            } else if (userStatus === 'approved') {
+                // 跳轉到會員中心
+                window.location.href = "Member.html";
+            } else if (userStatus === 'rejected') {
+                alert("您的貸款申請已被取消，請連繫客服了解詳情。");
+            }
+        }
+    </script>
 </body>
 </html>
