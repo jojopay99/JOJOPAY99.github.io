@@ -2,18 +2,21 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>JOJOPAY | 會員註冊</title>
+    <title>JOJOPAY | 會員詳細註冊</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
 <body class="bg-gray-900 text-white p-6">
     <div class="max-w-2xl mx-auto bg-gray-800 rounded-3xl p-8 border border-gray-700 shadow-2xl">
-        <h2 class="text-2xl font-bold text-indigo-400 mb-6 border-b border-gray-700 pb-4">填寫會員註冊資料</h2>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-indigo-400">填寫會員詳細資料</h2>
+            <a href="index.html" class="text-gray-400 hover:text-white underline text-sm">⬅️ 回首頁</a>
+        </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input type="text" id="name" placeholder="真實姓名" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
-            <input type="tel" id="phone" placeholder="手機號碼 (作為登入帳號)" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            <input type="tel" id="phone" placeholder="手機號碼 (登入帳號)" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
             <input type="password" id="pw" placeholder="設定登入密碼" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
             <input type="text" id="job" placeholder="現職工作" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
             <input type="text" id="hAddr" placeholder="戶籍地址" class="col-span-1 md:col-span-2 p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
@@ -21,6 +24,11 @@
             <input type="text" id="compName" placeholder="公司名稱" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
             <input type="tel" id="compTel" placeholder="公司電話" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
             <input type="text" id="bank" placeholder="收款銀行帳號" class="col-span-1 md:col-span-2 p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            
+            <div class="col-span-1 md:col-span-2 mt-4">
+                <label class="block text-sm text-gray-400 mb-2">上傳身分證照片</label>
+                <input type="file" id="idPhoto" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            </div>
         </div>
 
         <button onclick="reg()" class="w-full mt-8 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold text-lg transition-all active:scale-95">提交會員資格申請</button>
@@ -33,7 +41,6 @@
 
         function reg() {
             const id = document.getElementById('phone').value.trim();
-            // 抓取所有詳細欄位
             const userData = {
                 name: document.getElementById('name').value,
                 phone: id,
@@ -44,14 +51,16 @@
                 compName: document.getElementById('compName').value,
                 compTel: document.getElementById('compTel').value,
                 bank: document.getElementById('bank').value,
-                status: 'pending_user', // 這裡設定初始狀態為資格待審
-                loanLimit: 0
+                status: 'pending_user',
+                loanLimit: 0,
+                // 注意：照片通常需透過 Firebase Storage 上傳，這裡先簡易紀錄「已上傳」狀態
+                hasPhoto: document.getElementById('idPhoto').files.length > 0 ? "已上傳" : "未上傳"
             };
 
             if(!id || !userData.name || !userData.password) return alert("請至少填寫姓名、電話與密碼！");
 
             db.ref('users/' + id).set(userData).then(() => {
-                alert("註冊成功！管理員審核後即可登入申請貸款。");
+                alert("註冊成功！管理員審核後即可登入。");
                 location.href = 'index.html';
             });
         }
