@@ -2,29 +2,42 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>JOJOPAY | 高級管理後台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOJOPAY | 總管理後台與帳務系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body { background: #0a0a14; color: white; font-family: sans-serif; }
+        /* 隱藏捲軸但保持可滑動，讓介面更乾淨 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-gray-900 text-white p-4 md:p-8">
-    <div id="loginBox" class="max-w-sm mx-auto mt-20 p-6 bg-gray-800 rounded-xl border border-gray-700">
-        <h2 class="text-xl mb-4 text-center font-bold text-indigo-400">管理員驗證</h2>
-        <input type="password" id="admP" placeholder="請輸入管理密碼" class="w-full p-3 mb-4 bg-gray-700 rounded-lg outline-none">
-        <button onclick="adminLogin()" class="w-full bg-indigo-600 py-3 rounded-lg font-bold">進入系統</button>
+<body class="p-4 md:p-8">
+
+    <div id="loginBox" class="max-w-sm mx-auto mt-32 p-8 bg-gray-800 rounded-2xl border border-gray-700 shadow-2xl">
+        <h2 class="text-2xl mb-6 text-center font-bold text-indigo-400 tracking-widest">後台登入</h2>
+        <input type="password" id="admP" placeholder="請輸入管理員密碼 (0895)" class="w-full p-4 mb-6 bg-gray-900 border border-gray-600 rounded-xl outline-none text-white focus:border-indigo-500">
+        <button onclick="adminLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold text-lg transition-all active:scale-95">進入系統</button>
     </div>
 
-    <div id="adminPanel" class="hidden max-w-5xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold text-indigo-400">待審核申請名單</h1>
-            <button onclick="location.reload()" class="text-xs bg-gray-700 px-3 py-1 rounded">刷新數據</button>
+    <div id="adminPanel" class="hidden max-w-6xl mx-auto pb-20">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-white/10 pb-4 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-indigo-400">客戶與帳務管理系統</h1>
+                <p class="text-gray-500 text-sm mt-1">集中管理申請名單、在線方案與未繳餘額</p>
+            </div>
+            <button onclick="location.reload()" class="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-lg border border-gray-600 text-sm transition-all shadow-lg">🔄 刷新最新資料</button>
         </div>
         
         <div id="userList" class="space-y-6">
-            </div>
+            <div class="text-center text-gray-500 mt-20 animate-pulse">正在讀取資料庫...</div>
+        </div>
     </div>
 
     <script>
+        // 你的 Firebase 配置
         const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(conf);
         const db = firebase.database();
@@ -34,7 +47,82 @@
                 document.getElementById('loginBox').classList.add('hidden');
                 document.getElementById('adminPanel').classList.remove('hidden');
                 loadUsers();
-            } else { alert("密碼錯誤"); }
+            } else { alert("密碼錯誤，請重新輸入！"); }
+        }
+
+        function loadUsers() {
+            db.ref('users').on('value', (snapshot) => {
+                const users = snapshot.val();
+                let html = '';
+                
+                if (!users) {
+                    document.getElementById('userList').innerHTML = '<div class="text-center text-gray-500 mt-10">目前尚無任何客戶資料</div>';
+                    return;
+                }
+
+                for(let id in users) {
+                    const u = users[id];
+                    // 決定狀態標籤的顏色
+                    let statusColor = u.status === 'approved' ? 'bg-green-600' : (u.status === 'rejected' ? 'bg-red-600' : 'bg-pink-600');
+                    let statusText = u.status === 'approved' ? '已核准' : (u.status === 'rejected' ? '已拒絕' : '審核中');
+
+                    html += `
+                    <div class="bg-gray-800/80 rounded-3xl p-6 border border-gray-700 shadow-2xl backdrop-blur-sm">
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                            
+                            <div class="space-y-3 text-sm text-gray-400">
+                                <div class="flex items-center gap-3 border-b border-gray-700 pb-3 mb-2">
+                                    <span class="text-2xl font-black text-white">${u.name || '未填'}</span>
+                                    <span class="px-2 py-1 bg-gray-900 rounded text-xs border border-gray-600">${id}</span>
+                                    <span class="px-2 py-1 ${statusColor} text-white rounded text-xs font-bold ml-auto shadow-lg">${statusText}</span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+                                    <p>手機：<span class="text-white font-bold">${u.phone || '-'}</span></p>
+                                    <p>職業：<span class="text-white">${u.job || '-'}</span></p>
+                                    <p class="col-span-2">戶籍：<span class="text-white">${u.hAddr || '-'}</span></p>
+                                    <p class="col-span-2">現居：<span class="text-white">${u.cAddr || '-'}</span></p>
+                                    <p class="col-span-2">公司：<span class="text-white">${u.compName || '-'}</span> <span class="text-gray-500">(TEL: ${u.compTel || '-'})</span></p>
+                                </div>
+                                
+                                <div class="mt-4 pt-3 border-t border-gray-700 flex items-center gap-2">
+                                    <span class="text-lg">🏦</span>
+                                    <div>
+                                        <p class="text-xs text-gray-500">撥款/扣款帳戶</p>
+                                        <p class="text-yellow-400 font-mono text-base">${u.bank || '尚未填寫'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-900 p-5 rounded-2xl border border-indigo-500/30 relative">
+                                <h3 class="font-bold text-indigo-400 mb-4 flex items-center gap-2">
+                                    <span>💰 方案與帳務設定</span>
+                                </h3>
+                                
+                                <div class="grid grid-cols-2 gap-4 text-xs mb-6">
+                                    <div>
+                                        <label class="text-gray-500 ml-1">AI 顯示額度 (會員中心看到)</label>
+                                        <input type="number" id="limit-${id}" value="${u.loanLimit === '審核中' ? '' : u.loanLimit}" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-lg text-green-400 font-bold mt-1 outline-none focus:border-indigo-500" placeholder="例: 50000">
+                                    </div>
+                                    <div>
+                                        <label class="text-gray-500 ml-1">剩餘未繳金額</label>
+                                        <input type="number" id="remain-${id}" value="${u.remainingAmount || ''}" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-lg text-pink-400 font-bold mt-1 outline-none focus:border-indigo-500" placeholder="例: 35000">
+                                    </div>
+                                    <div>
+                                        <label class="text-gray-500 ml-1">當前在線方案</label>
+                                        <input type="text" id="plan-${id}" value="${u.activePlan || ''}" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white mt-1 outline-none focus:border-indigo-500" placeholder="例: 小額急用 12期">
+                                    </div>
+                                    <div>
+                                        <label class="text-gray-500 ml-1">算法 / 利率</label>
+                                        <input type="text" id="calc-${id}" value="${u.calcMethod || ''}" class="w-full p-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white mt-1 outline-none focus:border-indigo-500" placeholder="例: 本息攤還 月息1.5%">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="text-gray-500 ml-1">歷史紀錄 / 內部備註 (僅後台可見)</label>
+                                        <textarea id="notes-${id}" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 mt-1 h-20 outline-none focus:border-indigo-500 resize-none" placeholder="記錄客戶之前借過什麼、繳款正不正常、或是催收狀況...">${u.notes || ''}</textarea>
+                                    </div>
+                                </div>
+
+                                <div class            } else { alert("密碼錯誤"); }
         }
 
         function loadUsers() {
