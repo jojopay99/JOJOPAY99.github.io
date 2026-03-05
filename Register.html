@@ -2,22 +2,28 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOJOPAY | 快速註冊</title>
+    <title>JOJOPAY | 會員註冊</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
-<body class="bg-gray-900 text-white p-4">
-    <div class="max-w-md mx-auto bg-gray-800 rounded-3xl p-8 shadow-2xl border border-gray-700">
-        <h2 class="text-2xl font-bold text-center text-indigo-400 mb-6">建立新帳戶</h2>
-        <div class="space-y-4">
-            <input type="text" id="name" placeholder="真實姓名" class="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl outline-none focus:border-indigo-500">
-            <input type="tel" id="phone" placeholder="手機號碼 (登入帳號)" class="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl outline-none focus:border-indigo-500">
-            <input type="password" id="pw" placeholder="設定密碼" class="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl outline-none focus:border-indigo-500">
-            <input type="text" id="bank" placeholder="撥款銀行帳號" class="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl outline-none focus:border-indigo-500">
-            <button onclick="reg()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold text-lg transition-all active:scale-95">送出註冊申請</button>
+<body class="bg-gray-900 text-white p-6">
+    <div class="max-w-2xl mx-auto bg-gray-800 rounded-3xl p-8 border border-gray-700 shadow-2xl">
+        <h2 class="text-2xl font-bold text-indigo-400 mb-6 border-b border-gray-700 pb-4">填寫會員註冊資料</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="name" placeholder="真實姓名" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            <input type="tel" id="phone" placeholder="手機號碼 (作為登入帳號)" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            <input type="password" id="pw" placeholder="設定登入密碼" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            <input type="text" id="job" placeholder="現職工作" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            <input type="text" id="hAddr" placeholder="戶籍地址" class="col-span-1 md:col-span-2 p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            <input type="text" id="cAddr" placeholder="現居地址" class="col-span-1 md:col-span-2 p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            <input type="text" id="compName" placeholder="公司名稱" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            <input type="tel" id="compTel" placeholder="公司電話" class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
+            <input type="text" id="bank" placeholder="收款銀行帳號" class="col-span-1 md:col-span-2 p-3 bg-gray-900 border border-gray-700 rounded-lg outline-none">
         </div>
+
+        <button onclick="reg()" class="w-full mt-8 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold text-lg transition-all active:scale-95">提交會員資格申請</button>
     </div>
 
     <script>
@@ -26,23 +32,26 @@
         const db = firebase.database();
 
         function reg() {
-            const p = document.getElementById('phone').value;
-            const n = document.getElementById('name').value;
-            const pw = document.getElementById('pw').value;
-            const b = document.getElementById('bank').value;
+            const id = document.getElementById('phone').value.trim();
+            // 抓取所有詳細欄位
+            const userData = {
+                name: document.getElementById('name').value,
+                phone: id,
+                password: document.getElementById('pw').value,
+                job: document.getElementById('job').value,
+                hAddr: document.getElementById('hAddr').value,
+                cAddr: document.getElementById('cAddr').value,
+                compName: document.getElementById('compName').value,
+                compTel: document.getElementById('compTel').value,
+                bank: document.getElementById('bank').value,
+                status: 'pending_user', // 這裡設定初始狀態為資格待審
+                loanLimit: 0
+            };
 
-            if(!p || !n || !pw) return alert("請填寫完整資料");
+            if(!id || !userData.name || !userData.password) return alert("請至少填寫姓名、電話與密碼！");
 
-            db.ref('users/' + p).set({
-                name: n,
-                phone: p,
-                password: pw,
-                bank: b,
-                status: 'pending_user', // 待審核會員資格
-                loanLimit: 0,
-                remainingAmount: 0
-            }).then(() => {
-                alert("註冊成功！請等待管理員審核會員資格。");
+            db.ref('users/' + id).set(userData).then(() => {
+                alert("註冊成功！管理員審核後即可登入申請貸款。");
                 location.href = 'index.html';
             });
         }
