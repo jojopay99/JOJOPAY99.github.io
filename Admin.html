@@ -3,158 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOJOPAY | 貸款流程管理後台</title>
+    <title>JOJOPAY | 管理後台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         body { background: #0a0a14; color: white; font-family: sans-serif; }
-        .stat-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s; cursor: pointer; }
-        .stat-card:hover { border-color: #6366f1; transform: translateY(-2px); }
-        .active-filter { border-color: #6366f1; background: rgba(99, 102, 241, 0.2) !important; box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
-        .action-btn { transition: all 0.2s; font-size: 0.75rem; font-weight: bold; padding: 8px 12px; border-radius: 8px; }
-        .action-btn:active { scale: 0.95; }
+        .stat-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: 0.3s; }
+        .active-filter { border-color: #6366f1; background: rgba(99, 102, 241, 0.2) !important; }
+        .btn-sm { font-size: 0.7rem; padding: 6px 10px; border-radius: 6px; font-weight: bold; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4">
 
-    <div id="loginBox" class="max-w-sm mx-auto mt-32 p-8 bg-gray-800 rounded-2xl border border-gray-700 shadow-2xl relative z-50">
-        <h2 class="text-2xl mb-6 text-center font-bold text-indigo-400">管理登入</h2>
-        <input type="password" id="admP" placeholder="管理密碼 (0895)" class="w-full p-4 mb-6 bg-gray-900 border border-gray-600 rounded-xl outline-none text-white text-center">
-        <button onclick="adminLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold">進入後台</button>
+    <div id="loginBox" class="max-w-sm mx-auto mt-32 p-8 bg-gray-800 rounded-2xl border border-gray-700 text-center">
+        <h2 class="text-xl font-bold text-indigo-400 mb-6">後台安全驗證</h2>
+        <input type="password" id="admP" placeholder="密碼" class="w-full p-4 mb-6 bg-gray-900 border border-gray-600 rounded-xl text-center outline-none">
+        <button onclick="adminLogin()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold">登入</button>
     </div>
 
-    <div id="adminPanel" class="hidden max-w-6xl mx-auto pb-20">
-        
+    <div id="adminPanel" class="hidden max-w-6xl mx-auto">
         <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10">
-            <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('pending')" id="btn-pending">
-                <p class="text-pink-400 text-xs mb-1 font-bold">待審核</p>
-                <h3 class="text-2xl font-black text-white" id="count-pending">0</h3>
+            <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('pending_user')" id="btn-pending_user">
+                <p class="text-pink-400 text-[10px] font-bold">待審資格</p>
+                <h3 class="text-2xl font-black" id="c-puser">0</h3>
+            </div>
+            <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('pending_loan')" id="btn-pending_loan">
+                <p class="text-yellow-400 text-[10px] font-bold">待審貸款</p>
+                <h3 class="text-2xl font-black" id="c-ploan">0</h3>
             </div>
             <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('active')" id="btn-active">
-                <p class="text-indigo-400 text-xs mb-1 font-bold">線上 (借款中)</p>
-                <h3 class="text-2xl font-black text-white" id="count-active">0</h3>
+                <p class="text-indigo-400 text-[10px] font-bold">線上會員</p>
+                <h3 class="text-2xl font-black" id="c-active">0</h3>
             </div>
             <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('finished')" id="btn-finished">
-                <p class="text-green-400 text-xs mb-1 font-bold">下車 (已結清)</p>
-                <h3 class="text-2xl font-black text-white" id="count-finished">0</h3>
+                <p class="text-green-400 text-[10px] font-bold">正常下車</p>
+                <h3 class="text-2xl font-black" id="c-finished">0</h3>
             </div>
             <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('bad')" id="btn-bad">
-                <p class="text-red-500 text-xs mb-1 font-bold">呆帳</p>
-                <h3 class="text-2xl font-black text-white" id="count-bad">0</h3>
-            </div>
-            <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('all')" id="btn-all">
-                <p class="text-gray-400 text-xs mb-1 font-bold">全部名單</p>
-                <h3 class="text-2xl font-black text-white" id="count-all">0</h3>
+                <p class="text-red-500 text-[10px] font-bold">呆帳名單</p>
+                <h3 class="text-2xl font-black" id="c-bad">0</h3>
             </div>
         </div>
 
-        <div id="userList" class="space-y-4"></div>
+        <div id="userList" class="space-y-4 pb-20"></div>
     </div>
 
     <script>
         const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(conf);
         const db = firebase.database();
-        let allUsers = {};
-        let currentFilter = 'pending';
+        let users = {};
+        let currentType = 'pending_user';
 
         function adminLogin() {
-            if (document.getElementById('admP').value === '0895') {
+            if(document.getElementById('admP').value === '0895') {
                 document.getElementById('loginBox').classList.add('hidden');
                 document.getElementById('adminPanel').classList.remove('hidden');
-                initData();
-            } else { alert("密碼錯誤"); }
+                init();
+            }
         }
 
-        function initData() {
-            db.ref('users').on('value', (snapshot) => {
-                allUsers = snapshot.val() || {};
+        function init() {
+            db.ref('users').on('value', snap => {
+                users = snap.val() || {};
                 updateCounts();
-                filterList(currentFilter);
+                filterList(currentType);
             });
         }
 
         function updateCounts() {
-            let p=0, a=0, f=0, b=0, total=0;
-            for(let id in allUsers) {
-                total++;
-                const u = allUsers[id];
-                if(u.status === 'pending') p++;
-                else if(u.status === 'bad') b++;
-                else if(u.status === 'finished') f++;
-                else if(u.status === 'approved') a++;
+            let pu=0, pl=0, a=0, f=0, b=0;
+            for(let id in users) {
+                const s = users[id].status;
+                if(s==='pending_user') pu++;
+                else if(s==='pending_loan') pl++;
+                else if(s==='active') a++;
+                else if(s==='finished') f++;
+                else if(s==='bad') b++;
             }
-            document.getElementById('count-pending').innerText = p;
-            document.getElementById('count-active').innerText = a;
-            document.getElementById('count-finished').innerText = f;
-            document.getElementById('count-bad').innerText = b;
-            document.getElementById('count-all').innerText = total;
+            document.getElementById('c-puser').innerText = pu;
+            document.getElementById('c-ploan').innerText = pl;
+            document.getElementById('c-active').innerText = a;
+            document.getElementById('c-finished').innerText = f;
+            document.getElementById('c-bad').innerText = b;
         }
 
         function filterList(type) {
-            currentFilter = type;
-            const listArea = document.getElementById('userList');
+            currentType = type;
+            const area = document.getElementById('userList');
             let html = '';
-            
             document.querySelectorAll('.stat-card').forEach(el => el.classList.remove('active-filter'));
             document.getElementById('btn-' + type).classList.add('active-filter');
 
-            for (let id in allUsers) {
-                const u = allUsers[id];
-                let show = false;
-                if(type === 'all') show = true;
-                else if(type === 'pending' && u.status === 'pending') show = true;
-                else if(type === 'active' && u.status === 'approved') show = true;
-                else if(type === 'finished' && u.status === 'finished') show = true;
-                else if(type === 'bad' && u.status === 'bad') show = true;
+            for(let id in users) {
+                const u = users[id];
+                if(u.status !== type) continue;
 
-                if (show) {
-                    html += `
-                    <div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row gap-6">
-                        <div class="flex-1 space-y-2">
-                            <div class="flex items-center gap-3">
-                                <span class="text-xl font-bold">${u.name || '無名'}</span>
-                                <span class="text-xs text-gray-500 font-mono">${id}</span>
-                            </div>
-                            <div class="text-xs text-gray-400 grid grid-cols-2 gap-1">
-                                <p>電話: <span class="text-white">${u.phone}</span></p>
-                                <p>職業: <span class="text-white">${u.job}</span></p>
-                                <p class="col-span-2">帳戶: <span class="text-yellow-500">${u.bank || '未填'}</span></p>
-                                <p class="col-span-2 text-indigo-400 font-bold">申請額度: ${u.loanLimit || '未設定'}</p>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-wrap md:flex-nowrap gap-2 items-center border-t md:border-t-0 md:border-l border-gray-700 pt-4 md:pt-0 md:pl-6">
-                            <button onclick="changeStatus('${id}', 'approved')" class="action-btn bg-indigo-600 text-white">✅ 核准(線上)</button>
-                            <button onclick="changeStatus('${id}', 'finished')" class="action-btn bg-green-600 text-white">🏁 結清(下車)</button>
-                            <button onclick="changeStatus('${id}', 'bad')" class="action-btn bg-red-600 text-white">⚠️ 呆帳</button>
-                            <button onclick="deleteUser('${id}')" class="action-btn bg-gray-700 text-gray-300">❌ 刪除</button>
-                        </div>
-                    </div>`;
-                }
+                html += `
+                <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 flex flex-col md:flex-row justify-between gap-4 shadow-xl">
+                    <div>
+                        <p class="font-bold text-lg text-white">${u.name} <span class="text-xs text-gray-500">(${id})</span></p>
+                        <p class="text-xs text-gray-400">銀行帳戶: ${u.bank || '-'}</p>
+                        ${u.loanLimit ? `<p class="text-sm text-indigo-400 font-bold mt-1">申請金額: $${u.loanLimit}</p>` : ''}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${type === 'pending_user' ? `<button onclick="setStatus('${id}', 'official_user')" class="btn-sm bg-green-600">通過資格</button>` : ''}
+                        ${type === 'pending_loan' ? `<button onclick="approveLoan('${id}')" class="btn-sm bg-indigo-600">核准撥款</button>` : ''}
+                        
+                        ${type === 'active' ? `
+                            <button onclick="setStatus('${id}', 'finished')" class="btn-sm bg-green-500 text-white">正常下車</button>
+                            <button onclick="setStatus('${id}', 'bad')" class="btn-sm bg-red-600 text-white">標記呆帳</button>
+                        ` : ''}
+                        
+                        <button onclick="del('${id}')" class="btn-sm bg-gray-700">刪除會員</button>
+                    </div>
+                </div>`;
             }
-            listArea.innerHTML = html || '<p class="text-center text-gray-600 py-10">目前沒有此類別的資料</p>';
+            area.innerHTML = html || '<p class="text-center text-gray-600 mt-20">目前暫無名單</p>';
         }
 
-        function changeStatus(id, newStatus) {
-            let limit = allUsers[id].loanLimit;
-            if(newStatus === 'approved' && (!limit || limit === '審核中')) {
-                limit = prompt("請輸入核准的額度：", "50000");
-                if(!limit) return;
-            }
-            
-            db.ref('users/' + id).update({
-                status: newStatus,
-                loanLimit: limit,
-                remainingAmount: (newStatus === 'finished') ? 0 : (allUsers[id].remainingAmount || limit)
-            }).then(() => alert("狀態已更新"));
+        function setStatus(id, s) {
+            db.ref('users/'+id).update({ status: s }).then(() => alert("操作成功"));
         }
 
-        function deleteUser(id) {
-            if(confirm("確定要刪除此會員資料嗎？此操作不可恢復。")) {
-                db.ref('users/' + id).remove().then(() => alert("已刪除"));
-            }
+        function approveLoan(id) {
+            const limit = users[id].loanLimit;
+            db.ref('users/'+id).update({
+                status: 'active',
+                remainingAmount: limit
+            }).then(() => alert("已核准並移至線上會員"));
+        }
+
+        function del(id) {
+            if(confirm("確定刪除？")) db.ref('users/'+id).remove();
         }
     </script>
 </body>
