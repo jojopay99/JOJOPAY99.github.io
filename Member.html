@@ -7,55 +7,81 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>
-        body { background: #0a0a14; color: white; }
-        .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; }
-    </style>
 </head>
-<body class="p-6">
-    <div class="max-w-md mx-auto space-y-6">
-        <h1 class="text-2xl font-bold text-indigo-400">您好，<span id="userName">載入中</span></h1>
+<body class="bg-[#0a0a14] text-white p-6">
+    <div id="app" class="max-w-md mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-indigo-400">JOJOPAY 會員中心</h1>
+            <button onclick="location.href='index.html'" class="text-sm text-gray-500">登出</button>
+        </div>
 
-        <div class="glass-card p-8 text-center space-y-4">
-            <p class="text-gray-400 text-sm">AI 智慧預估額度 (TWD)</p>
-            <h2 id="aiLimit" class="text-5xl font-black text-indigo-500 tracking-tighter">計算中...</h2>
-            <div class="pt-4 border-t border-white/10 flex justify-around text-xs text-gray-500">
-                <div><span>可借金額</span><p class="text-white font-bold" id="canBorrow">--</p></div>
-                <div><span>手續費率</span><p class="text-white font-bold">需由人工估算</p></div>
+        <div id="statusBox" class="bg-gray-800 rounded-3xl p-8 border border-gray-700 text-center shadow-xl">
+            <p class="text-gray-400 mb-2">當前帳戶狀態</p>
+            <div id="statusText" class="text-xl font-bold mb-6 italic italic">讀取中...</div>
+            
+            <div id="actionArea" class="hidden">
+                <button onclick="applyLoan()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold shadow-lg shadow-indigo-500/20">立即申請貸款</button>
+            </div>
+
+            <div id="loanDetail" class="hidden space-y-4 text-left">
+                <div class="bg-black/30 p-4 rounded-xl border border-indigo-500/20">
+                    <p class="text-xs text-gray-500">剩餘未繳</p>
+                    <p class="text-2xl font-black text-pink-500" id="remAmount">$0</p>
+                </div>
             </div>
         </div>
-
-        <div class="grid grid-cols-2 gap-4">
-            <button onclick="alert('將為您跳轉到貸款頁面....')" class="glass-card p-6 flex flex-col items-center gap-2">
-                <span class="text-2xl">💰</span><span class="font-bold">立即申請</span>
-            </button>
-            <button onclick="window.location.href='https://line.me/R/ti/p/@yourid'" class="glass-card p-6 flex flex-col items-center gap-2">
-                <span class="text-2xl">💬</span><span class="font-bold">聯繫專員</span>
-            </button>
-        </div>
-
-        <button onclick="localStorage.clear(); location.href='index.html';" class="w-full py-4 text-gray-500 text-sm">安全登出</button>
     </div>
 
     <script>
         const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(conf);
         const db = firebase.database();
-        const userId = localStorage.getItem('currentUser');
+        const userPhone = localStorage.getItem('userPhone');
 
-        if(!userId) location.href = "index.html";
+        if(!userPhone) location.href = 'index.html';
 
-        // 動態監聽資料庫
-        db.ref('users/' + userId).on('value', (snapshot) => {
+        db.ref('users/' + userPhone).on('value', (snapshot) => {
             const u = snapshot.val();
-            if(u) {
-                document.getElementById('userName').innerText = u.name;
-                // 顯示管理員輸入的額度
-                const limit = u.loanLimit || "評估中";
-                document.getElementById('aiLimit').innerText = limit.toLocaleString();
-                document.getElementById('canBorrow').innerText = limit === "審核中" ? "--" : limit;
+            const st = document.getElementById('statusText');
+            const action = document.getElementById('actionArea');
+            const detail = document.getElementById('loanDetail');
+
+            if(u.status === 'pending_user') {
+                st.innerText = "會員資格審核中...";
+                st.className = "text-xl font-bold text-pink-500 italic";
+            } else if(u.status === 'official_user') {
+                st.innerText = "正式會員 (尚未借款)";
+                st.className = "text-xl font-bold text-green-400";
+                action.classList.remove('hidden');
+            } else if(u.status === 'pending_loan') {
+                st.innerText = "貸款申請審核中...";
+                st.className = "text-xl font-bold text-indigo-400 animate-pulse";
+                action.classList.add('hidden');
+            } else if(u.status === 'active') {
+                st.innerText = "線上會員 (借款中)";
+                st.className = "text-xl font-bold text-indigo-400";
+                action.classList.add('hidden');
+                detail.classList.remove('hidden');
+                document.getElementById('remAmount').innerText = '$' + (u.remainingAmount || 0);
+            } else if(u.status === 'finished') {
+                st.innerText = "信用良好 (已結清)";
+                st.className = "text-xl font-bold text-green-500";
+                action.classList.remove('hidden');
+            } else if(u.status === 'bad') {
+                st.innerText = "帳戶已被停用 (呆帳)";
+                st.className = "text-xl font-bold text-red-600";
             }
         });
+
+        function applyLoan() {
+            const amt = prompt("請輸入您想申請的貸款金額：", "50000");
+            if(amt) {
+                db.ref('users/' + userPhone).update({
+                    status: 'pending_loan',
+                    loanLimit: amt
+                }).then(() => alert("貸款申請已送出！"));
+            }
+        }
     </script>
 </body>
 </html>
