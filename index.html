@@ -2,85 +2,44 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JOJOPAY | 會員登入</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>
-        body { background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%); color: white; min-height: 100vh; display: flex; flex-direction: column; }
-        .login-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .input-field { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .login-btn { background: #6366f1; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
-    </style>
 </head>
-<body class="items-center justify-between">
-    <div class="mt-20 text-center"><h1 class="text-3xl font-bold tracking-widest text-indigo-400">JoJoPAY</h1></div>
-    <main class="w-full max-w-sm px-6">
-        <div class="login-card rounded-3xl p-8 shadow-2xl">
-            <h2 class="text-center text-xl font-bold mb-8 tracking-widest">會員登入</h2>
-            <form class="space-y-6">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-2 ml-1">身分證字號</label>
-                    <input type="text" id="userId" placeholder="請輸入身分證字號" class="input-field w-full py-4 px-4 rounded-xl text-white outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-2 ml-1">密碼 (手機號碼)</label>
-                    <input type="password" id="userPw" placeholder="請輸入密碼" class="input-field w-full py-4 px-4 rounded-xl text-white outline-none">
-                </div>
-                <button type="button" onclick="login()" class="login-btn w-full py-4 rounded-xl font-bold text-lg mt-4 active:scale-95 transition-transform">立即登入</button>
-            </form>
-            <div class="flex justify-between mt-8 px-2">
-                <a href="Register.html" class="text-indigo-400 text-sm">註冊新會員</a>
-                <a href="javascript:void(0)" onclick="alert('你連自己手機都忘記會不會太跨張!!!')" class="text-gray-500 text-sm">忘記密碼？</a>
-            </div>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen p-6">
+    <div class="max-w-sm w-full bg-gray-800 rounded-3xl p-8 shadow-2xl border border-gray-700">
+        <h2 class="text-2xl font-bold text-center text-indigo-400 mb-8">會員登入</h2>
+        <div class="space-y-4">
+            <input type="text" id="userId" placeholder="手機號碼" class="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl outline-none focus:border-indigo-500">
+            <input type="password" id="userPw" placeholder="登入密碼" class="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl outline-none focus:border-indigo-500">
+            <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold text-lg transition-all active:scale-95">登入</button>
+            <p class="text-center text-sm text-gray-500 mt-4">還沒有帳號？<a href="Register.html" class="text-indigo-400 underline">立即註冊</a></p>
         </div>
-    </main>
+    </div>
 
     <script>
-    // 1. Firebase 基本配置
-    const firebaseConfig = { 
-        databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" 
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+        const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(conf);
+        const db = firebase.database();
 
-    function login() {
-        const id = document.getElementById('userId').value.trim().toUpperCase();
-        const pw = document.getElementById('userPw').value.trim();
+        function login() {
+            const id = document.getElementById('userId').value.trim();
+            const pw = document.getElementById('userPw').value.trim();
 
-        if (!id || !pw) {
-            alert("請填寫身分證字號及密碼！");
-            return;
-        }
+            if (!id || !pw) return alert("請輸入帳號與密碼");
 
-        // 2. 從 Firebase 撈取該使用者的資料
-        db.ref('users/' + id).once('value', (snapshot) => {
-            const user = snapshot.val();
-
-            if (user) {
-                // 比對密碼 (這裡是手機號碼)
-                if (user.phone === pw) {
-                    // 登入成功，將身分證存入手機快取，方便會員中心讀取
-                    localStorage.setItem('currentUser', id);
-
-                    // 3. 判斷審核狀態
-                    if (user.status === 'pending') {
-                        alert("您的會員資格還在審核中，請耐心等候，或連繫客服人員諮詢。");
-                    } else if (user.status === 'rejected') {
-                        alert("您的貸款申請已被取消，請連繫客服了解詳情。");
-                    } else if (user.status === 'approved') {
-                        // 通過審核，執行跳轉
-                        window.location.href = "Member.html";
-                    }
+            db.ref('users/' + id).once('value', (snapshot) => {
+                const u = snapshot.val();
+                if (u && u.password === pw) {
+                    localStorage.setItem('userPhone', id);
+                    // 不論狀態為何，一律轉導至會員中心，由 Member.html 處理狀態呈現
+                    window.location.href = "Member.html";
                 } else {
-                    alert("密碼錯誤！請輸入您註冊時的手機號碼。");
+                    alert("帳號或密碼錯誤");
                 }
-            } else {
-                alert("找不到此帳號，請確認身分證字號是否正確，或先進行註冊。");
-            }
-        });
-    }
-</script>
+            });
+        }
+    </script>
 </body>
 </html>
