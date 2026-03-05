@@ -3,150 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOJOPAY | 總管理後台與帳務系統</title>
+    <title>JOJOPAY | 營運管理儀表板</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    
     <style>
         body { background: #0a0a14; color: white; font-family: sans-serif; }
+        .stat-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s; cursor: pointer; }
+        .stat-card:hover { background: rgba(99, 102, 241, 0.1); border-color: #6366f1; transform: translateY(-2px); }
+        .active-filter { border-color: #6366f1; background: rgba(99, 102, 241, 0.2) !important; box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
-        .glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
     <div id="loginBox" class="max-w-sm mx-auto mt-32 p-8 bg-gray-800 rounded-2xl border border-gray-700 shadow-2xl relative z-50">
-        <h2 class="text-2xl mb-6 text-center font-bold text-indigo-400 tracking-widest">後台驗證</h2>
-        <input type="password" id="admP" placeholder="管理員密碼 (0895)" class="w-full p-4 mb-6 bg-gray-900 border border-gray-600 rounded-xl outline-none text-white focus:border-indigo-500">
-        <button onclick="adminLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold text-lg transition-all active:scale-95 shadow-lg">進入系統</button>
+        <h2 class="text-2xl mb-6 text-center font-bold text-indigo-400 tracking-widest">系統登入</h2>
+        <input type="password" id="admP" placeholder="管理員密碼 (0895)" class="w-full p-4 mb-6 bg-gray-900 border border-gray-600 rounded-xl outline-none text-white focus:border-indigo-500 text-center">
+        <button onclick="adminLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold text-lg transition-all active:scale-95 shadow-lg">進入管理後台</button>
     </div>
 
     <div id="adminPanel" class="hidden max-w-6xl mx-auto pb-20">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-white/10 pb-4 gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-indigo-400">客戶與帳務管理系統</h1>
-                <p class="text-gray-500 text-sm mt-1">集中管理申請名單、在線方案與未繳餘額</p>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="stat-card p-5 rounded-2xl text-center" onclick="filterList('all')" id="btn-all">
+                <p class="text-gray-400 text-xs mb-1">總會員人數</p>
+                <h3 class="text-3xl font-black text-white" id="count-all">0</h3>
             </div>
-            <button onclick="location.reload()" class="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-lg border border-gray-600 text-sm">🔄 刷新最新資料</button>
+            <div class="stat-card p-5 rounded-2xl text-center" onclick="filterList('active')" id="btn-active">
+                <p class="text-gray-400 text-xs mb-1">線上人數 (已借款)</p>
+                <h3 class="text-3xl font-black text-indigo-400" id="count-active">0</h3>
+            </div>
+            <div class="stat-card p-5 rounded-2xl text-center" onclick="filterList('finished')" id="btn-finished">
+                <p class="text-gray-400 text-xs mb-1">正常下車人數</p>
+                <h3 class="text-3xl font-black text-green-400" id="count-finished">0</h3>
+            </div>
+            <div class="stat-card p-5 rounded-2xl text-center" onclick="filterList('bad')" id="btn-bad">
+                <p class="text-gray-400 text-xs mb-1">呆帳人數</p>
+                <h3 class="text-3xl font-black text-red-500" id="count-bad">0</h3>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-6 px-2">
+            <h2 class="text-xl font-bold border-l-4 border-indigo-500 pl-3" id="listTitle">全部會員名單</h2>
+            <button onclick="location.reload()" class="text-xs text-gray-500 underline">重整數據</button>
         </div>
         
-        <div id="userList" class="space-y-6">
-            <p class="text-center text-gray-500">正在讀取雲端資料...</p>
-        </div>
+        <div id="userList" class="space-y-6"></div>
     </div>
 
     <script>
-        // --- 1. Firebase 初始化 (請確保 URL 正確) ---
-        const firebaseConfig = { 
-            databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" 
-        };
-        
-        // 初始化 App
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(conf);
+        const db = firebase.database();
+        let allUsers = {}; // 暫存所有資料
 
-        // --- 2. 登入邏輯 ---
         function adminLogin() {
-            const inputPass = document.getElementById('admP').value;
-            console.log("嘗試登入..."); // 除錯用
-
-            if (inputPass === '0895') {
+            if (document.getElementById('admP').value === '0895') {
                 document.getElementById('loginBox').classList.add('hidden');
                 document.getElementById('adminPanel').classList.remove('hidden');
-                loadUsers();
-            } else {
-                alert("密碼不正確！");
-            }
+                initData();
+            } else { alert("密碼錯誤"); }
         }
 
-        // --- 3. 載入資料 ---
-        function loadUsers() {
-            const listArea = document.getElementById('userList');
-            
-            database.ref('users').on('value', (snapshot) => {
-                const users = snapshot.val();
-                let html = '';
-                
-                if (!users) {
-                    listArea.innerHTML = '<div class="text-center text-gray-500 mt-10">資料庫目前是空的</div>';
-                    return;
+        function initData() {
+            db.ref('users').on('value', (snapshot) => {
+                allUsers = snapshot.val() || {};
+                calculateStats();
+                filterList('all'); // 預設顯示全部
+            });
+        }
+
+        // 核心邏輯：計算各類人數
+        function calculateStats() {
+            let total = 0, active = 0, finished = 0, bad = 0;
+            for (let id in allUsers) {
+                total++;
+                const u = allUsers[id];
+                const remain = parseFloat(u.remainingAmount) || 0;
+                const notes = (u.notes || "").toLowerCase();
+
+                // 判斷邏輯：
+                // 1. 呆帳：備註包含 "呆帳" 或 "黑名單"
+                if (notes.includes("呆帳") || notes.includes("黑名單")) {
+                    bad++;
+                } 
+                // 2. 正常下車：餘額為 0 且 狀態是已核准過
+                else if (remain <= 0 && u.status === 'approved' && u.activePlan) {
+                    finished++;
                 }
+                // 3. 線上 (已借款)：餘額大於 0
+                else if (remain > 0) {
+                    active++;
+                }
+            }
+            document.getElementById('count-all').innerText = total;
+            document.getElementById('count-active').innerText = active;
+            document.getElementById('count-finished').innerText = finished;
+            document.getElementById('count-bad').innerText = bad;
+        }
 
-                for (let id in users) {
-                    const u = users[id];
+        // 過濾並顯示名單
+        function filterList(type) {
+            const listArea = document.getElementById('userList');
+            let html = '';
+            
+            // 切換按鈕樣式
+            document.querySelectorAll('.stat-card').forEach(el => el.classList.remove('active-filter'));
+            document.getElementById('btn-' + type).classList.add('active-filter');
+
+            for (let id in allUsers) {
+                const u = allUsers[id];
+                const remain = parseFloat(u.remainingAmount) || 0;
+                const notes = (u.notes || "").toLowerCase();
+                
+                let show = false;
+                if (type === 'all') show = true;
+                if (type === 'active' && remain > 0) show = true;
+                if (type === 'finished' && remain <= 0 && u.status === 'approved' && u.activePlan && !notes.includes("呆帳")) show = true;
+                if (type === 'bad' && (notes.includes("呆帳") || notes.includes("黑名單"))) show = true;
+
+                if (show) {
                     let statusColor = u.status === 'approved' ? 'bg-green-600' : (u.status === 'rejected' ? 'bg-red-600' : 'bg-pink-600');
-                    let statusText = u.status === 'approved' ? '已核准' : (u.status === 'rejected' ? '已拒絕' : '審核中');
-
                     html += `
-                    <div class="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-xl mb-6">
+                    <div class="bg-gray-800/80 rounded-3xl p-6 border border-gray-700 shadow-xl mb-4">
                         <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                             <div class="space-y-3 text-sm text-gray-400">
                                 <div class="flex items-center gap-3 border-b border-gray-700 pb-3">
                                     <span class="text-2xl font-black text-white">${u.name || '未填'}</span>
                                     <span class="px-2 py-1 bg-gray-900 rounded text-xs border border-gray-600">${id}</span>
-                                    <span class="px-2 py-1 ${statusColor} text-white rounded text-xs font-bold ml-auto">${statusText}</span>
+                                    <span class="px-2 py-1 ${statusColor} text-white rounded text-xs font-bold ml-auto">${u.status}</span>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2 mt-2">
                                     <p>手機：<span class="text-white">${u.phone || '-'}</span></p>
                                     <p>職業：<span class="text-white">${u.job || '-'}</span></p>
-                                    <p class="col-span-2">戶籍：<span class="text-white">${u.hAddr || '-'}</span></p>
-                                    <p class="col-span-2">現居：<span class="text-white">${u.cAddr || '-'}</span></p>
-                                    <p class="col-span-2">公司：<span class="text-white">${u.compName || '-'}</span> <span class="text-xs">(${u.compTel || '-'})</span></p>
                                     <p class="col-span-2 text-yellow-400 font-bold">帳戶：${u.bank || '-'}</p>
                                 </div>
                             </div>
-
                             <div class="bg-black/30 p-5 rounded-2xl border border-indigo-500/20">
                                 <div class="grid grid-cols-2 gap-3 mb-4">
-                                    <div>
-                                        <label class="text-[10px] text-gray-500">顯示額度</label>
-                                        <input type="number" id="limit-${id}" value="${u.loanLimit || ''}" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-green-400 font-bold outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] text-gray-500">剩餘未繳</label>
-                                        <input type="number" id="remain-${id}" value="${u.remainingAmount || ''}" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-pink-400 font-bold outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] text-gray-500">在線方案</label>
-                                        <input type="text" id="plan-${id}" value="${u.activePlan || ''}" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white text-xs outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] text-gray-500">算法利率</label>
-                                        <input type="text" id="calc-${id}" value="${u.calcMethod || ''}" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white text-xs outline-none">
-                                    </div>
-                                    <div class="col-span-2">
-                                        <label class="text-[10px] text-gray-500">內部紀錄</label>
-                                        <textarea id="notes-${id}" class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-gray-300 text-xs h-12 outline-none resize-none">${u.notes || ''}</textarea>
-                                    </div>
+                                    <div><label class="text-[10px] text-gray-500">顯示額度</label><input type="number" id="limit-${id}" value="${u.loanLimit || ''}" class="w-full p-2 bg-gray-700 rounded text-green-400 font-bold outline-none"></div>
+                                    <div><label class="text-[10px] text-gray-500">剩餘未繳</label><input type="number" id="remain-${id}" value="${u.remainingAmount || ''}" class="w-full p-2 bg-gray-700 rounded text-pink-400 font-bold outline-none"></div>
+                                    <div><label class="text-[10px] text-gray-500">在線方案</label><input type="text" id="plan-${id}" value="${u.activePlan || ''}" class="w-full p-2 bg-gray-700 rounded text-white text-xs outline-none"></div>
+                                    <div class="col-span-1"><label class="text-[10px] text-gray-500">備註(含"呆帳"會分類)</label><input type="text" id="notes-${id}" value="${u.notes || ''}" class="w-full p-2 bg-gray-700 rounded text-gray-300 text-xs outline-none"></div>
                                 </div>
-                                <div class="flex gap-2">
-                                    <button onclick="saveF('${id}', 'approved')" class="flex-1 bg-indigo-600 py-3 rounded-xl font-bold text-xs shadow-lg active:scale-95">儲存並核准</button>
-                                    <button onclick="saveF('${id}', 'rejected')" class="bg-red-600 px-4 py-3 rounded-xl font-bold text-xs active:scale-95">拒絕</button>
-                                </div>
+                                <button onclick="saveF('${id}')" class="w-full bg-indigo-600 py-2 rounded-xl font-bold text-xs">儲存更新</button>
                             </div>
                         </div>
                     </div>`;
                 }
-                listArea.innerHTML = html;
-            });
+            }
+            listArea.innerHTML = html || '<p class="text-center text-gray-600 py-10">此類別目前無資料</p>';
         }
 
-        // 儲存更新邏輯
-        function saveF(id, newS) {
+        function saveF(id) {
             const data = {
-                status: newS,
                 loanLimit: document.getElementById('limit-' + id).value,
                 remainingAmount: document.getElementById('remain-' + id).value,
                 activePlan: document.getElementById('plan-' + id).value,
-                calcMethod: document.getElementById('calc-' + id).value,
-                notes: document.getElementById('notes-' + id).value
+                notes: document.getElementById('notes-' + id).value,
+                status: 'approved' // 儲存即視為核准
             };
-
-            database.ref('users/' + id).update(data).then(() => {
-                alert("更新成功！");
-            }).catch(e => alert("錯誤: " + e.message));
+            db.ref('users/' + id).update(data).then(() => alert("資料已同步！"));
         }
     </script>
 </body>
