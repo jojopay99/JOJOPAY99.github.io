@@ -30,10 +30,10 @@
                 <input type="text" id="name" class="input-box" placeholder="真實姓名">
                 <input type="text" id="idCard" class="input-box" placeholder="身分證字號">
                 <div class="flex gap-2">
-                    <input type="tel" id="phone" class="input-box" placeholder="手機號碼">
+                    <input type="tel" id="phone" class="input-box" placeholder="手機號碼 (作為登入帳號)">
                     <button onclick="alert('驗證碼已發送')" class="bg-indigo-600 px-4 rounded-xl text-xs mt-1">發送</button>
                 </div>
-                <input type="text" id="vCode" class="input-box" placeholder="驗證碼 (1234)">
+                <input type="text" id="vCode" class="input-box" placeholder="驗證碼 (預設 1234)">
                 <input type="text" id="hAddr" class="input-box" placeholder="戶籍地址">
                 <input type="text" id="cAddr" class="input-box" placeholder="現居地址">
                 <input type="text" id="bank" class="input-box" placeholder="撥款帳戶 (銀行+帳號)">
@@ -58,35 +58,13 @@
                 <div id="contactList">
                     <div class="contact-row space-y-2">
                         <div class="flex gap-2">
-                            <input type="text" placeholder="關係" class="input-box text-sm">
-                            <input type="text" placeholder="姓名" class="input-box text-sm">
+                            <input type="text" id="cRel" placeholder="關係" class="input-box text-sm">
+                            <input type="text" id="cName" placeholder="姓名" class="input-box text-sm">
                         </div>
-                        <input type="tel" placeholder="聯絡電話" class="input-box text-sm">
+                        <input type="tel" id="cTel" placeholder="聯絡電話" class="input-box text-sm">
                     </div>
                 </div>
                 <button onclick="addContact()" class="w-full py-2 border border-dashed border-gray-600 rounded-xl text-xs text-gray-400">+ 新增聯絡人</button>
-            </section>
-
-            <section class="space-y-4">
-                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">證件上傳</h2>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="upload-item" onclick="triggerUpload('f1')"><span id="t-f1">🪪 正面</span><img id="img-f1"><input type="file" id="f1" class="hidden" onchange="preview(this, 'f1')"></div>
-                    <div class="upload-item" onclick="triggerUpload('f2')"><span id="t-f2">🪪 反面</span><img id="img-f2"><input type="file" id="f2" class="hidden" onchange="preview(this, 'f2')"></div>
-                    <div class="upload-item" onclick="triggerUpload('f3')"><span id="t-f3">🏦 存摺</span><img id="img-f3"><input type="file" id="f3" class="hidden" onchange="preview(this, 'f3')"></div>
-                    <div class="upload-item" onclick="triggerUpload('f4')"><span id="t-f4">📜 證明</span><img id="img-f4"><input type="file" id="f4" class="hidden" onchange="preview(this, 'f4')"></div>
-                </div>
-            </section>
-
-            <section class="kyc-box space-y-4">
-                <h2 class="font-bold text-pink-400 flex items-center gap-2 text-lg">📸 身分認證 (KYC)</h2>
-                <div class="bg-black/40 p-3 rounded-lg text-[11px] leading-relaxed text-gray-300 border border-pink-500/30">
-                    請手持白紙寫下：<br>本人 <span class="text-pink-400 font-bold">姓名</span> 於 <span class="text-pink-400 font-bold">今日日期</span><br>申請 <span class="text-indigo-400">JOJOPAY</span> 會員
-                </div>
-                <div class="upload-item border-pink-500/40 text-pink-300 py-10" onclick="triggerUpload('f5')">
-                    <span id="t-f5">🤳 點擊拍攝手持自拍</span>
-                    <img id="img-f5">
-                    <input type="file" id="f5" class="hidden" onchange="preview(this, 'f5')">
-                </div>
             </section>
 
             <button onclick="submitAll()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all shadow-xl">送出申請資料</button>
@@ -105,41 +83,33 @@
             document.getElementById('contactList').appendChild(div);
         }
 
-        function triggerUpload(id) { document.getElementById(id).click(); }
-
-        function preview(input, id) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    document.getElementById('img-' + id).src = e.target.result;
-                    document.getElementById('img-' + id).style.display = 'block';
-                    document.getElementById('t-' + id).style.display = 'none';
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
         function submitAll() {
-            const id = document.getElementById('idCard').value.trim().toUpperCase();
-            if(!id || document.getElementById('vCode').value !== '1234') return alert("請檢查身分證字號或驗證碼");
+            const phone = document.getElementById('phone').value.trim();
+            const idCard = document.getElementById('idCard').value.trim().toUpperCase();
+            const vCode = document.getElementById('vCode').value.trim();
+
+            if(!phone || !idCard || vCode !== '1234') return alert("請檢查手機、身分證及驗證碼是否正確");
 
             const data = {
                 name: document.getElementById('name').value,
-                idCard: id,
-                phone: document.getElementById('phone').value,
+                idCard: idCard,
+                phone: phone,
                 hAddr: document.getElementById('hAddr').value,
                 cAddr: document.getElementById('cAddr').value,
                 bank: document.getElementById('bank').value,
                 job: document.getElementById('jobType').value,
                 compName: document.getElementById('compName').value,
                 compTel: document.getElementById('compTel').value,
-                status: 'pending_user', // 統一設定為待資格審核
+                status: 'pending_user',
                 loanLimit: 0
             };
 
-            db.ref('users/' + id).set(data).then(() => {
-                alert("申請成功！請等候審核");
+            // 使用手機號碼作為 Key 存入資料庫
+            db.ref('users/' + phone).set(data).then(() => {
+                alert("申請成功！請等候審核。");
                 window.location.href = "index.html";
+            }).catch(error => {
+                alert("錯誤：" + error.message);
             });
         }
     </script>
