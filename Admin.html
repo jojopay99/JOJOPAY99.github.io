@@ -2,69 +2,151 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>JOJOPAY | 管理後台</title>
+    <title>JOJOPAY | 貸款流程管理後台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body { background: #0a0a14; color: white; }
+        .stat-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; }
+        .active-filter { border-color: #6366f1; background: rgba(99, 102, 241, 0.2) !important; }
+        .btn-action { font-size: 0.75rem; padding: 6px 12px; border-radius: 8px; font-weight: bold; }
+    </style>
 </head>
-<body class="bg-gray-900 text-white p-4">
-    <div id="loginBox" class="max-w-sm mx-auto mt-20 p-8 bg-gray-800 rounded-2xl">
-        <input type="password" id="admP" placeholder="管理密碼" class="w-full p-4 bg-gray-900 mb-4 rounded-xl text-center">
-        <button onclick="adminLogin()" class="w-full bg-indigo-600 py-3 rounded-xl">登入</button>
+<body class="p-4 md:p-8">
+
+    <div id="loginBox" class="max-w-sm mx-auto mt-32 p-8 bg-gray-800 rounded-2xl border border-gray-700 text-center">
+        <h2 class="text-xl font-bold text-indigo-400 mb-6">後台管理登入</h2>
+        <input type="password" id="admP" placeholder="管理密碼" class="w-full p-4 mb-6 bg-gray-900 border border-gray-600 rounded-xl text-center outline-none">
+        <button onclick="adminLogin()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold">進入系統</button>
     </div>
 
-    <div id="adminPanel" class="hidden max-w-5xl mx-auto">
-        <h2 class="text-xl font-bold mb-6">審核管理區</h2>
-        <div class="grid grid-cols-1 gap-6" id="userList"></div>
+    <div id="adminPanel" class="hidden max-w-6xl mx-auto">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10">
+            <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('pending_user')" id="btn-pending_user">
+                <p class="text-pink-400 text-xs font-bold">1. 資格待審</p>
+                <h3 class="text-2xl font-black" id="c-puser">0</h3>
+            </div>
+            <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('pending_loan')" id="btn-pending_loan">
+                <p class="text-yellow-400 text-xs font-bold">2. 貸款待審</p>
+                <h3 class="text-2xl font-black" id="c-ploan">0</h3>
+            </div>
+            <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('active')" id="btn-active">
+                <p class="text-indigo-400 text-xs font-bold">3. 線上會員</p>
+                <h3 class="text-2xl font-black" id="c-active">0</h3>
+            </div>
+            <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('finished')" id="btn-finished">
+                <p class="text-green-400 text-xs font-bold">4. 正常下車</p>
+                <h3 class="text-2xl font-black" id="c-finished">0</h3>
+            </div>
+            <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('bad')" id="btn-bad">
+                <p class="text-red-500 text-xs font-bold">5. 呆帳名單</p>
+                <h3 class="text-2xl font-black" id="c-bad">0</h3>
+            </div>
+        </div>
+
+        <div id="userList" class="space-y-4"></div>
     </div>
 
     <script>
         const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(conf);
         const db = firebase.database();
+        let users = {};
+        let currentFilter = 'pending_user';
 
         function adminLogin() {
             if(document.getElementById('admP').value === '0895') {
                 document.getElementById('loginBox').classList.add('hidden');
                 document.getElementById('adminPanel').classList.remove('hidden');
-                loadData();
-            }
+                init();
+            } else { alert("密碼錯誤"); }
         }
 
-        function loadData() {
-            db.ref('users').on('value', (snap) => {
-                const users = snap.val();
-                let html = '';
-                for(let id in users) {
-                    const u = users[id];
-                    let actionBtn = '';
-
-                    // 1. 判斷顯示邏輯
-                    if(u.status === 'pending_user') {
-                        actionBtn = `<button onclick="up('${id}', 'official_user')" class="bg-green-600 px-4 py-2 rounded">審核會員通過</button>`;
-                    } else if(u.status === 'pending_loan') {
-                        actionBtn = `<button onclick="up('${id}', 'active')" class="bg-blue-600 px-4 py-2 rounded">核准撥款(線上)</button>`;
-                    } else if(u.status === 'active') {
-                        actionBtn = `
-                            <button onclick="up('${id}', 'finished')" class="bg-green-500 px-2 py-1 rounded">正常下車</button>
-                            <button onclick="up('${id}', 'bad')" class="bg-red-600 px-2 py-1 rounded">呆帳</button>
-                            <button onclick="del('${id}')" class="bg-gray-600 px-2 py-1 rounded">刪除</button>`;
-                    }
-
-                    html += `<div class="bg-gray-800 p-4 rounded-xl flex justify-between items-center border border-gray-700">
-                        <div>
-                            <p class="font-bold">${u.name} <span class="text-xs text-gray-500">(${u.status})</span></p>
-                            <p class="text-sm">申請金額: $${u.loanLimit || 0}</p>
-                        </div>
-                        <div class="space-x-2">${actionBtn}</div>
-                    </div>`;
-                }
-                document.getElementById('userList').innerHTML = html;
+        function init() {
+            db.ref('users').on('value', snap => {
+                users = snap.val() || {};
+                updateCounts();
+                filterList(currentFilter);
             });
         }
 
-        function up(id, s) { db.ref('users/'+id).update({status: s}); }
-        function del(id) { db.ref('users/'+id).remove(); }
+        function updateCounts() {
+            let pu=0, pl=0, a=0, f=0, b=0;
+            for(let id in users) {
+                const s = users[id].status;
+                if(s==='pending_user') pu++;
+                else if(s==='pending_loan') pl++;
+                else if(s==='active') a++;
+                else if(s==='finished') f++;
+                else if(s==='bad') b++;
+            }
+            document.getElementById('c-puser').innerText = pu;
+            document.getElementById('c-ploan').innerText = pl;
+            document.getElementById('c-active').innerText = a;
+            document.getElementById('c-finished').innerText = f;
+            document.getElementById('c-bad').innerText = b;
+        }
+
+        function filterList(type) {
+            currentFilter = type;
+            const area = document.getElementById('userList');
+            let html = '';
+            document.querySelectorAll('.stat-card').forEach(el => el.classList.remove('active-filter'));
+            document.getElementById('btn-' + type).classList.add('active-filter');
+
+            for(let id in users) {
+                const u = users[id];
+                if(u.status !== type) continue;
+
+                html += `
+                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="flex-1">
+                        <p class="text-xl font-bold">${u.name} <span class="text-xs text-gray-500 font-mono">(${id})</span></p>
+                        <p class="text-sm text-gray-400 mt-1">銀行帳戶: ${u.bank || '未提供'}</p>
+                        ${u.loanLimit > 0 ? `<p class="text-indigo-400 font-bold">申請貸款額度: $${u.loanLimit}</p>` : ''}
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        ${type === 'pending_user' ? `
+                            <button onclick="updateSt('${id}', 'official_user')" class="btn-action bg-green-600">通過資格</button>
+                            <button onclick="del('${id}')" class="btn-action bg-red-900">拒絕資格</button>
+                        ` : ''}
+
+                        ${type === 'pending_loan' ? `
+                            <button onclick="approveLoan('${id}')" class="btn-action bg-indigo-600 text-white">核准撥款</button>
+                            <button onclick="updateSt('${id}', 'official_user')" class="btn-action bg-gray-600">拒絕貸款</button>
+                        ` : ''}
+
+                        ${type === 'active' ? `
+                            <button onclick="updateSt('${id}', 'finished')" class="btn-action bg-green-500">正常下車</button>
+                            <button onclick="updateSt('${id}', 'bad')" class="btn-action bg-red-600">標記呆帳</button>
+                        ` : ''}
+
+                        <button onclick="del('${id}')" class="btn-action bg-gray-700 text-gray-400">刪除資料</button>
+                    </div>
+                </div>`;
+            }
+            area.innerHTML = html || '<div class="text-center py-20 text-gray-600">此類別目前沒有資料</div>';
+        }
+
+        function updateSt(id, s) {
+            db.ref('users/'+id).update({ status: s }).then(() => alert("狀態已更新"));
+        }
+
+        function approveLoan(id) {
+            const limit = users[id].loanLimit;
+            db.ref('users/'+id).update({
+                status: 'active',
+                remainingAmount: limit
+            }).then(() => alert("已撥款並移至線上會員"));
+        }
+
+        function del(id) {
+            if(confirm("確定要刪除這筆會員資料嗎？")) {
+                db.ref('users/'+id).remove().then(() => alert("資料已清除"));
+            }
+        }
     </script>
 </body>
 </html>
