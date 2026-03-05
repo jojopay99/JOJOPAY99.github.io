@@ -2,19 +2,34 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JOJOPAY | 會員中心</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
-<body class="bg-gray-900 text-white p-6">
-    <div class="max-w-md mx-auto">
-        <h1 class="text-2xl font-bold mb-8" id="welcomeMsg">會員中心</h1>
-        
-        <div id="content" class="bg-gray-800 p-8 rounded-3xl border border-gray-700 text-center">
-            <div id="uiStatus">載入中...</div>
+<body class="bg-[#0a0a14] text-white p-6">
+    <div id="app" class="max-w-md mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-indigo-400">JOJOPAY 會員中心</h1>
+            <button onclick="location.href='index.html'" class="text-sm text-gray-500">登出</button>
         </div>
-        <button onclick="localStorage.clear(); location.href='index.html';" class="w-full mt-8 text-gray-500 text-sm">登出</button>
+
+        <div id="statusBox" class="bg-gray-800 rounded-3xl p-8 border border-gray-700 text-center shadow-xl">
+            <p class="text-gray-400 mb-2">當前帳戶狀態</p>
+            <div id="statusText" class="text-xl font-bold mb-6 italic italic">讀取中...</div>
+            
+            <div id="actionArea" class="hidden">
+                <button onclick="applyLoan()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold shadow-lg shadow-indigo-500/20">立即申請貸款</button>
+            </div>
+
+            <div id="loanDetail" class="hidden space-y-4 text-left">
+                <div class="bg-black/30 p-4 rounded-xl border border-indigo-500/20">
+                    <p class="text-xs text-gray-500">剩餘未繳</p>
+                    <p class="text-2xl font-black text-pink-500" id="remAmount">$0</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -23,30 +38,49 @@
         const db = firebase.database();
         const userPhone = localStorage.getItem('userPhone');
 
-        db.ref('users/' + userPhone).on('value', (snap) => {
-            const u = snap.val();
-            const ui = document.getElementById('uiStatus');
-            
+        if(!userPhone) location.href = 'index.html';
+
+        db.ref('users/' + userPhone).on('value', (snapshot) => {
+            const u = snapshot.val();
+            const st = document.getElementById('statusText');
+            const action = document.getElementById('actionArea');
+            const detail = document.getElementById('loanDetail');
+
             if(u.status === 'pending_user') {
-                ui.innerHTML = `<p class="text-yellow-400 font-bold text-xl">會員資格審核中</p><p class="text-gray-400 mt-2">請等待管理員審核您的資料。</p>`;
+                st.innerText = "會員資格審核中...";
+                st.className = "text-xl font-bold text-pink-500 italic";
             } else if(u.status === 'official_user') {
-                ui.innerHTML = `<p class="text-green-400 font-bold text-xl">資格已開通</p>
-                                <button onclick="applyLoan()" class="mt-4 bg-indigo-600 w-full py-3 rounded-xl font-bold">申請貸款</button>`;
+                st.innerText = "正式會員 (尚未借款)";
+                st.className = "text-xl font-bold text-green-400";
+                action.classList.remove('hidden');
             } else if(u.status === 'pending_loan') {
-                ui.innerHTML = `<p class="text-blue-400 font-bold text-xl">貸款審核中</p>`;
+                st.innerText = "貸款申請審核中...";
+                st.className = "text-xl font-bold text-indigo-400 animate-pulse";
+                action.classList.add('hidden');
             } else if(u.status === 'active') {
-                ui.innerHTML = `<p class="text-indigo-400 font-bold text-xl">線上會員 (借款中)</p>
-                                <div class="mt-4 p-4 bg-gray-900 rounded-xl text-left text-sm">
-                                    <p>剩餘應繳：<span class="text-pink-500 font-bold">$${u.remainingAmount}</span></p>
-                                </div>`;
+                st.innerText = "線上會員 (借款中)";
+                st.className = "text-xl font-bold text-indigo-400";
+                action.classList.add('hidden');
+                detail.classList.remove('hidden');
+                document.getElementById('remAmount').innerText = '$' + (u.remainingAmount || 0);
             } else if(u.status === 'finished') {
-                ui.innerHTML = `<p class="text-green-500 font-bold text-xl">正常下車 (已還清)</p>`;
+                st.innerText = "信用良好 (已結清)";
+                st.className = "text-xl font-bold text-green-500";
+                action.classList.remove('hidden');
+            } else if(u.status === 'bad') {
+                st.innerText = "帳戶已被停用 (呆帳)";
+                st.className = "text-xl font-bold text-red-600";
             }
         });
 
         function applyLoan() {
-            const amt = prompt("輸入申請金額：", "50000");
-            if(amt) db.ref('users/' + userPhone).update({ status: 'pending_loan', loanLimit: amt });
+            const amt = prompt("請輸入您想申請的貸款金額：", "50000");
+            if(amt) {
+                db.ref('users/' + userPhone).update({
+                    status: 'pending_loan',
+                    loanLimit: amt
+                }).then(() => alert("貸款申請已送出！"));
+            }
         }
     </script>
 </body>
