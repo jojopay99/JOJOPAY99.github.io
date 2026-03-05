@@ -3,114 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOJOPAY | 完整註冊</title>
+    <title>JOJOPAY | 快速註冊</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>
-        body { background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%); color: white; }
-        .form-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px; }
-        .input-box { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; padding: 12px; border-radius: 12px; margin-top: 4px; color: white; outline: none; font-size: 14px; }
-        .upload-item { background: rgba(255, 255, 255, 0.03); border: 2px dashed rgba(255, 255, 255, 0.15); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 16 / 10; cursor: pointer; position: relative; overflow: hidden; }
-        .upload-item img { position: absolute; width: 100%; height: 100%; object-fit: cover; display: none; }
-        .kyc-box { background: rgba(236, 72, 153, 0.05); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 20px; padding: 20px; }
-        .contact-row { background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 10px; }
-    </style>
 </head>
-<body class="p-4 pb-24">
-    <div class="max-w-md mx-auto">
-        <h1 class="text-2xl font-bold mb-6 text-center text-indigo-400">填寫會員資料</h1>
-        
-        <div class="form-card p-6 space-y-8">
-            <section class="space-y-4">
-                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">基本資料</h2>
-                <input type="text" id="name" class="input-box" placeholder="真實姓名">
-                <input type="text" id="idCard" class="input-box" placeholder="身分證字號">
-                <div class="flex gap-2">
-                    <input type="tel" id="phone" class="input-box" placeholder="手機號碼">
-                    <button onclick="alert('驗證碼已發送')" class="bg-indigo-600 px-4 rounded-xl text-xs mt-1">發送</button>
-                </div>
-                <input type="text" id="vCode" class="input-box" placeholder="驗證碼 (1234)">
-                <input type="text" id="hAddr" class="input-box" placeholder="戶籍地址">
-                <input type="text" id="cAddr" class="input-box" placeholder="現居地址">
-                <input type="text" id="bank" class="input-box" placeholder="撥款帳戶 (銀行+帳號)">
-            </section>
-
-            <section class="space-y-4">
-                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">工作資訊</h2>
-                <select id="jobType" class="input-box bg-gray-800">
-                    <option value="">選擇職業類型</option>
-                    <option value="學生">學生</option>
-                    <option value="上班族">上班族</option>
-                    <option value="軍公教">軍公教</option>
-                    <option value="自由業">自由業</option>
-                </select>
-                <input type="text" id="compName" class="input-box" placeholder="公司/學校名稱">
-                <input type="text" id="compAddr" class="input-box" placeholder="公司/學校地址">
-                <input type="tel" id="compTel" class="input-box" placeholder="公司/學校電話">
-            </section>
-
-            <section class="space-y-4">
-                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">聯絡人(最少3位)</h2>
-                <div id="contactList">
-                    <div class="contact-row space-y-2">
-                        <div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"></div>
-                        <input type="tel" placeholder="聯絡電話" class="input-box text-sm">
-                    </div>
-                </div>
-                <button onclick="addContact()" class="w-full py-2 border border-dashed border-gray-600 rounded-xl text-xs text-gray-400">+ 新增聯絡人</button>
-            </section>
-
-            <section class="space-y-4">
-                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">證件上傳</h2>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="upload-item" onclick="triggerUpload('f1')">
-                        <span id="t-f1">🪪 身分證正面</span>
-                        <img id="img-f1">
-                        <input type="file" id="f1" class="hidden" accept="image/*" onchange="preview(this, 'f1')">
-                    </div>
-                    <div class="upload-item" onclick="triggerUpload('f2')">
-                        <span id="t-f2">🪪 身分證反面</span>
-                        <img id="img-f2">
-                        <input type="file" id="f2" class="hidden" accept="image/*" onchange="preview(this, 'f2')">
-                    </div>                    <div class="upload-item" onclick="triggerUpload('f2')">
-                        <span id="t-f3">🪪 健保卡</span>
-                        <img id="img-f3">
-                        <input type="file" id="f3" class="hidden" accept="image/*" onchange="preview(this, 'f3')">
-                    </div>
-                    <div class="upload-item" onclick="triggerUpload('f4')">
-                        <span id="t-f4">🏦 存摺封面</span>
-                        <img id="img-f4">
-                        <input type="file" id="f4" class="hidden" accept="image/*" onchange="preview(this, 'f4')">
-                    </div>
-                    <div class="upload-item" onclick="triggerUpload('f5')">
-                        <span id="t-f5">📜 工作證/學生證/軍人證</span>
-                        <img id="img-f5">
-                        <input type="file" id="f5" class="hidden" accept="image/*" onchange="preview(this, 'f5')">
-                    </div>
-                    <div class="upload-item" onclick="triggerUpload('f6')">
-                        <span id="t-f6">📜 上傳加分資料</span>
-                        <img id="img-f6">
-                        <input type="file" id="f6" class="hidden" accept="image/*" onchange="preview(this, 'f6')">
-                    </div>
-                </div>
-            </section>
-
-            <section class="kyc-box space-y-4">
-                <h2 class="font-bold text-pink-400 flex items-center gap-2 text-lg">📸 身分認證 (KYC)</h2>
-                <div class="bg-black/40 p-3 rounded-lg text-[11px] leading-relaxed text-gray-300 border border-pink-500/30">
-                    請手持白紙寫下：<br>
-                    本人 <span class="text-pink-400 font-bold">姓名</span> 於 <span class="text-pink-400 font-bold">今日日期</span><br>
-                    申請 <span class="text-indigo-400">JOJOPAY</span> 會員
-                </div>
-                <div class="upload-item border-pink-500/40 text-pink-300 py-10" onclick="triggerUpload('f5')">
-                    <span id="t-f5">🤳 點擊拍攝手持自拍</span>
-                    <img id="img-f5">
-                    <input type="file" id="f5" class="hidden" accept="image/*" onchange="preview(this, 'f5')">
-                </div>
-            </section>
-
-            <button onclick="submitAll()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all shadow-xl">送出申請資料</button>
+<body class="bg-gray-900 text-white p-4">
+    <div class="max-w-md mx-auto bg-gray-800 rounded-3xl p-8 shadow-2xl border border-gray-700">
+        <h2 class="text-2xl font-bold text-center text-indigo-400 mb-6">建立新帳戶</h2>
+        <div class="space-y-4">
+            <input type="text" id="name" placeholder="真實姓名" class="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl outline-none focus:border-indigo-500">
+            <input type="tel" id="phone" placeholder="手機號碼 (登入帳號)" class="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl outline-none focus:border-indigo-500">
+            <input type="password" id="pw" placeholder="設定密碼" class="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl outline-none focus:border-indigo-500">
+            <input type="text" id="bank" placeholder="撥款銀行帳號" class="w-full p-4 bg-gray-900 border border-gray-700 rounded-xl outline-none focus:border-indigo-500">
+            <button onclick="reg()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold text-lg transition-all active:scale-95">送出註冊申請</button>
         </div>
     </div>
 
@@ -119,47 +25,25 @@
         firebase.initializeApp(conf);
         const db = firebase.database();
 
-        function addContact() {
-            const div = document.createElement('div');
-            div.className = "contact-row space-y-2";
-            div.innerHTML = `<div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"></div><input type="tel" placeholder="聯絡電話" class="input-box text-sm">`;
-            document.getElementById('contactList').appendChild(div);
-        }
+        function reg() {
+            const p = document.getElementById('phone').value;
+            const n = document.getElementById('name').value;
+            const pw = document.getElementById('pw').value;
+            const b = document.getElementById('bank').value;
 
-        function triggerUpload(id) { document.getElementById(id).click(); }
+            if(!p || !n || !pw) return alert("請填寫完整資料");
 
-        function preview(input, id) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('img-' + id).src = e.target.result;
-                    document.getElementById('img-' + id).style.display = 'block';
-                    document.getElementById('t-' + id).style.display = 'none';
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function submitAll() {
-            const id = document.getElementById('idCard').value.trim().toUpperCase();
-            if(!id || document.getElementById('vCode').value !== '1234') return alert("請檢查必填欄位或驗證碼");
-
-            const data = {
-                name: document.getElementById('name').value,
-                idCard: id,
-                phone: document.getElementById('phone').value,
-                hAddr: document.getElementById('hAddr').value,
-                cAddr: document.getElementById('cAddr').value,
-                bank: document.getElementById('bank').value,
-                job: document.getElementById('jobType').value,
-                compName: document.getElementById('compName').value,
-                compTel: document.getElementById('compTel').value,
-                status: 'pending', loanLimit: '審核中'
-            };
-
-            db.ref('users/' + id).set(data).then(() => {
-                alert("申請成功！請等候審核");
-                window.location.href = "index.html";
+            db.ref('users/' + p).set({
+                name: n,
+                phone: p,
+                password: pw,
+                bank: b,
+                status: 'pending_user', // 待審核會員資格
+                loanLimit: 0,
+                remainingAmount: 0
+            }).then(() => {
+                alert("註冊成功！請等待管理員審核會員資格。");
+                location.href = 'index.html';
             });
         }
     </script>
