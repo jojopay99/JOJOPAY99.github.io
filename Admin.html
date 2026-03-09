@@ -50,6 +50,19 @@
                     else if(u.status=='loan_active') s2++;
                     else if(u.status=='bad_debt') s3++;
 
+                    // 處理圖片顯示邏輯 (包含普通證件與 extra 加分照片)
+                    let imgHtml = '';
+                    if(u.imgs) {
+                        imgHtml = Object.entries(u.imgs).map(([key, url]) => `
+                            <a href="${url}" target="_blank" rel="noopener noreferrer" class="relative">
+                                <img src="${url}" class="w-16 h-16 object-cover rounded-lg border ${key === 'extra' ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-600'}">
+                                ${key === 'extra' ? '<span class="absolute -top-1 -right-1 bg-green-500 text-[8px] rounded-full px-1">加分</span>' : ''}
+                            </a>
+                        `).join('');
+                    } else {
+                        imgHtml = '<p class="text-xs text-gray-500 p-2">無證件</p>';
+                    }
+
                     html += `
                     <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 shadow-xl">
                         <h2 class="text-xl font-bold mb-2">${u.name}</h2>
@@ -65,11 +78,7 @@
                         </div>
                         
                         <div class="flex gap-2 my-4 overflow-x-auto p-2 bg-black rounded-xl">
-                            ${u.imgs ? Object.entries(u.imgs).map(([key, url]) => `
-                                <a href="${url}" target="_blank" rel="noopener noreferrer">
-                                    <img src="${url}" class="w-16 h-16 object-cover rounded-lg cursor-pointer border border-gray-600 hover:border-indigo-500">
-                                </a>
-                            `).join('') : '<p class="text-xs text-gray-500 p-2">無證件</p>'}
+                            ${imgHtml}
                         </div>
 
                         <div class="mt-4 p-3 bg-black rounded-xl border border-gray-700">
