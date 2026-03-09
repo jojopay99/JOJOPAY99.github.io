@@ -1,35 +1,65 @@
-<body class="bg-[#0a0a0f] text-white p-8">
-    <div id="login" class="max-w-xs mx-auto mt-20 p-8 bg-[#151520] rounded-3xl text-center">
-        <input type="password" id="p" placeholder="管理密碼" class="w-full p-3 mb-4 bg-black rounded border border-gray-700 text-center">
-        <button onclick="if(document.getElementById('p').value==='0895'){document.getElementById('login').classList.add('hidden');document.getElementById('adm').classList.remove('hidden');load();}" class="bg-indigo-600 w-full py-2 rounded">進入</button>
-    </div>
-    <div id="adm" class="hidden max-w-7xl mx-auto">
-        <div class="flex gap-4 mb-8">
-            <button onclick="filt('all')" class="bg-gray-800 px-4 py-2 rounded">全部</button>
-            <button onclick="filt('pending_user')" class="bg-yellow-900 px-4 py-2 rounded">待審</button>
-            <button onclick="filt('official_user')" class="bg-green-900 px-4 py-2 rounded">核准</button>
-        </div>
-        <div id="list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-    </div>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>JOJOPAY | 完整管理後台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+    <div id="loginBox" class="max-w-xs mx-auto mt-20 p-8 bg-gray-800 rounded-2xl">
+        <input type="password" id="admP" placeholder="管理密碼" class="w-full p-3 mb-4 bg-black rounded-lg border border-gray-600 text-center">
+        <button onclick="checkAdmin()" class="w-full bg-blue-600 py-3 rounded-lg font-bold">進入後台</button>
+    </div>
+
+    <div id="adminPanel" style="display:none;" class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">會員審核中心</h1>
+        <div class="flex gap-4 mb-8">
+            <button onclick="filter('all')" class="bg-gray-700 px-4 py-2 rounded">全部</button>
+            <button onclick="filter('pending_user')" class="bg-yellow-800 px-4 py-2 rounded">待審核</button>
+            <button onclick="filter('loan_active')" class="bg-blue-800 px-4 py-2 rounded">貸款中</button>
+            <button onclick="filter('bad_debt')" class="bg-red-800 px-4 py-2 rounded">呆帳</button>
+        </div>
+        <div id="userList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        let users = {}; let f = 'all';
-        function load() { db.ref('users').on('value', s => { users = s.val() || {}; render(); }); }
-        function filt(s) { f = s; render(); }
-        function render() {
-            let html = '';
-            for(let id in users) {
-                if(f !== 'all' && users[id].status !== f) continue;
-                html += `<div class="bg-[#151520] p-6 rounded-3xl border border-gray-700">
-                    <h2 class="font-bold">${users[id].name} (${id})</h2>
-                    <p class="text-sm text-gray-400">手機: ${users[id].phone} | 工作: ${users[id].job} | 薪: ${users[id].salary}</p>
-                    <div class="flex gap-2 mt-4">${users[id].imgs ? Object.keys(users[id].imgs).map(k=>`<img src="${users[id].imgs[k]}" class="w-16 h-12 rounded">`).join('') : ''}</div>
-                    <button onclick="db.ref('users/${id}').update({status:'official_user', loanLimit:30000})" class="w-full mt-4 bg-indigo-600 py-2 rounded">核准</button>
-                </div>`;
-            }
-            document.getElementById('list').innerHTML = html;
+        function checkAdmin() {
+            if(document.getElementById('admP').value === '0895') {
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                loadData('all');
+            } else { alert("密碼錯誤"); }
         }
+
+        function loadData(status) {
+            db.ref('users').on('value', snap => {
+                const users = snap.val() || {};
+                let html = '';
+                for(let id in users) {
+                    const u = users[id];
+                    if(status !== 'all' && u.status !== status) continue;
+                    html += `<div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                        <h2 class="text-xl font-bold mb-2">${u.name}</h2>
+                        <p class="text-sm text-gray-400">工作: ${u.job} | 薪: ${u.salary}</p>
+                        <p class="text-sm text-gray-400">銀行: ${u.bank}</p>
+                        <div class="flex gap-2 my-4">
+                            ${u.imgs ? Object.keys(u.imgs).map(k => `<img src="${u.imgs[k]}" class="w-16 h-12 rounded cursor-pointer" onclick="window.open('${u.imgs[k]}')">`).join('') : '無證件'}
+                        </div>
+                        <select onchange="updateStatus('${id}', this.value)" class="w-full bg-black p-2 rounded">
+                            <option value="pending_user" ${u.status=='pending_user'?'selected':''}>待審核</option>
+                            <option value="loan_active" ${u.status=='loan_active'?'selected':''}>貸款中</option>
+                            <option value="bad_debt" ${u.status=='bad_debt'?'selected':''}>呆帳</option>
+                        </select>
+                    </div>`;
+                }
+                document.getElementById('userList').innerHTML = html;
+            });
+        }
+        function updateStatus(id, status) { db.ref('users/'+id).update({status: status}); }
+        function filter(s) { loadData(s); }
     </script>
 </body>
+</html>
