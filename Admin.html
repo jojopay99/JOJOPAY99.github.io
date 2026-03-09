@@ -1,28 +1,73 @@
-<body class="bg-gray-950 text-white p-8">
-    <h1 class="text-3xl font-bold mb-8">管理後台</h1>
-    <div id="list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>JOJOPAY | 管理後台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body { background-color: #0a0a0f; color: #e2e8f0; font-family: sans-serif; }
+        .card { background: #151520; border: 1px solid #2d2d3a; border-radius: 20px; padding: 20px; transition: 0.3s; }
+        .card:hover { border-color: #4f46e5; }
+    </style>
+</head>
+<body class="p-8">
+    <div id="loginBox" class="max-w-xs mx-auto mt-20 p-8 card text-center">
+        <h2 class="text-xl font-bold mb-6 text-indigo-400">系統管理員登入</h2>
+        <input type="password" id="admP" placeholder="輸入管理密碼" class="w-full p-3 mb-4 bg-black rounded-lg border border-gray-700 text-center">
+        <button onclick="checkAdmin()" class="w-full bg-indigo-600 py-3 rounded-lg font-bold hover:bg-indigo-500">進入系統</button>
+    </div>
+
+    <div id="adminPanel" class="hidden max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 border-l-4 border-indigo-500 pl-4">會員資料管理</h1>
+        <div id="userList" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
+    </div>
+
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        db.ref('users').on('value', s => {
-            const users = s.val() || {};
-            let html = '';
-            for(let id in users) {
-                const u = users[id];
-                html += `
-                <div class="bg-gray-900 p-6 rounded-3xl border border-gray-700">
-                    <h2 class="text-xl font-bold">${u.name}</h2>
-                    <p class="text-sm text-gray-400">ID: ${id} | 手機: ${u.phone} | 薪: ${u.salary} | 工作: ${u.job}</p>
-                    <div class="flex gap-2 mt-4">${u.imgs ? Object.keys(u.imgs).map(k=>`<img src="${u.imgs[k]}" class="w-16 h-12 rounded">`).join('') : ''}</div>
-                    <button onclick="app('${id}')" class="w-full mt-4 bg-indigo-600 py-2 rounded-xl font-bold">通過審核並設定額度</button>
-                </div>`;
-            }
-            document.getElementById('list').innerHTML = html;
-        });
-        function app(id) {
-            const amt = prompt("設定額度", "30000");
+
+        function checkAdmin() {
+            if(document.getElementById('admP').value === '0895') {
+                document.getElementById('loginBox').classList.add('hidden');
+                document.getElementById('adminPanel').classList.remove('hidden');
+                loadUsers();
+            } else { alert("密碼錯誤"); }
+        }
+
+        function loadUsers() {
+            db.ref('users').on('value', snap => {
+                const users = snap.val() || {};
+                let html = '';
+                for(let id in users) {
+                    const u = users[id];
+                    html += `
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold text-white">${u.name}</h2>
+                            <span class="text-xs bg-gray-800 px-3 py-1 rounded-full">${u.status || '審核中'}</span>
+                        </div>
+                        <div class="text-sm space-y-1 text-gray-400">
+                            <p>帳號(身分證): <span class="text-white">${id}</span></p>
+                            <p>手機(密碼): <span class="text-white">${u.phone}</span></p>
+                            <p>工作/月薪: <span class="text-white">${u.job} / ${u.salary}</span></p>
+                            <p>地址: <span class="text-white">${u.address}</span></p>
+                            <p>撥款帳號: <span class="text-white">${u.bank}</span></p>
+                        </div>
+                        <div class="flex gap-2 mt-4 overflow-x-auto">
+                            ${u.imgs ? Object.keys(u.imgs).map(k => `<img src="${u.imgs[k]}" class="w-16 h-12 rounded border border-gray-700">`).join('') : '<span class="text-xs">無上傳</span>'}
+                        </div>
+                        <button onclick="approve('${id}')" class="w-full mt-6 bg-indigo-600 py-2 rounded-lg text-sm font-bold hover:bg-indigo-500">核准並設定額度</button>
+                    </div>`;
+                }
+                document.getElementById('userList').innerHTML = html;
+            });
+        }
+
+        function approve(id) {
+            const amt = prompt("設定核准額度:", "30000");
             if(amt) db.ref('users/'+id).update({status: 'official_user', loanLimit: parseInt(amt)});
         }
     </script>
 </body>
+</html>
