@@ -12,7 +12,7 @@
     <nav class="p-6 flex justify-between items-center border-b border-gray-800">
         <div class="w-24"></div> 
         <h1 class="text-3xl font-bold text-indigo-400">JOJOPAY</h1>
-        <a id="authBtn" href="#" onclick="handleNav()" class="bg-indigo-600 px-5 py-2 rounded-full text-sm font-bold">會員中心</a>
+        <a id="authBtn" href="javascript:void(0)" onclick="handleNav()" class="bg-indigo-600 px-5 py-2 rounded-full text-sm font-bold">會員中心</a>
     </nav>
 
     <main class="text-center py-20 px-6">
@@ -31,21 +31,21 @@
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
         const uId = localStorage.getItem('uId');
-        const btn = document.getElementById('authBtn');
+        
+        // 處理右上角按鈕邏輯
+        function handleNav() {
+            if (localStorage.getItem('uId')) {
+                window.location.href = "Member.html";
+            } else {
+                window.location.href = "Login.html";
+            }
+        }
 
         // 初始化檢查登入狀態
         if(uId) {
             db.ref('users/'+uId).once('value', s => {
-                if(s.val()) btn.innerText = s.val().name + " 您好";
+                if(s.val()) document.getElementById('authBtn').innerText = s.val().name + " 您好";
             });
-        }
-
-        function handleNav() {
-            if(uId) {
-                window.location.href = "Member.html";
-            } else {
-                window.location.href = "Login.html"; // 跳轉至獨立的登入頁
-            }
         }
     </script>
 </body>
