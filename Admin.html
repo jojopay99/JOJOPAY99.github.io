@@ -1,75 +1,32 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <title>JOJOPAY | 完整管理後台</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-</head>
-<body class="bg-gray-950 text-white min-h-screen p-6">
-    <div id="loginBox" class="max-w-xs mx-auto mt-20 p-8 bg-gray-900 rounded-3xl border border-gray-700 text-center">
-        <h2 class="text-xl font-bold mb-6">管理員權限驗證</h2>
-        <input type="password" id="admP" placeholder="輸入管理密碼" class="w-full p-3 mb-4 bg-gray-950 rounded-xl border border-gray-700 text-center">
-        <button onclick="checkAdmin()" class="w-full bg-indigo-600 py-3 rounded-xl font-bold">進入系統</button>
-    </div>
-
-    <div id="adminPanel" class="hidden max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8 text-indigo-400">會員完整資料清單</h1>
+<body class="bg-gray-950 text-white p-8">
+    <div id="adminPanel" class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-indigo-400">會員詳細審核管理</h1>
         <div id="userList" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
     </div>
-
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-
-        function checkAdmin() {
-            if(document.getElementById('admP').value === '0895') {
-                document.getElementById('loginBox').classList.add('hidden');
-                document.getElementById('adminPanel').classList.remove('hidden');
-                loadUsers();
-            } else { alert("權限不足"); }
-        }
-
-        function loadUsers() {
-            db.ref('users').on('value', snap => {
-                const users = snap.val() || {};
-                let html = '';
-                for(let id in users) {
-                    const u = users[id];
-                    html += `
-                    <div class="bg-gray-900 p-6 rounded-3xl border border-gray-800 shadow-2xl">
-                        <div class="flex justify-between mb-4">
-                            <h2 class="text-xl font-bold text-white">${u.name}</h2>
-                            <span class="text-xs bg-gray-700 px-3 py-1 rounded-full">${u.status}</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-y-2 text-sm text-gray-400 mb-4">
-                            <p><strong>帳號(證號):</strong> ${id}</p>
-                            <p><strong>手機:</strong> ${u.phone}</p>
-                            <p><strong>地址:</strong> ${u.address}</p>
-                            <p><strong>單位:</strong> ${u.job}</p>
-                            <p><strong>薪資:</strong> ${u.salary}</p>
-                            <p><strong>緊急聯絡:</strong> ${u.contact}</p>
-                        </div>
-                        <div class="flex gap-2 overflow-x-auto pb-2">
-                            ${u.imgs ? Object.keys(u.imgs).map(k => `<img src="${u.imgs[k]}" class="w-20 h-14 object-cover rounded-lg border border-gray-700">`).join('') : '無資料'}
-                        </div>
-                        <div class="mt-6 flex gap-3">
-                            <button onclick="approve('${id}')" class="flex-1 bg-green-600 py-2 rounded-lg font-bold">核准</button>
-                            <button onclick="del('${id}')" class="px-4 bg-red-900 rounded-lg">刪除</button>
-                        </div>
-                    </div>`;
-                }
-                document.getElementById('userList').innerHTML = html;
-            });
-        }
-
+        db.ref('users').on('value', s => {
+            const users = s.val() || {};
+            let html = '';
+            for(let id in users) {
+                const u = users[id];
+                html += `
+                <div class="bg-gray-900 p-6 rounded-3xl border border-gray-700">
+                    <h2 class="text-xl font-bold">${u.name}</h2>
+                    <p class="text-sm text-gray-400 mt-2">帳號: ${id} | 手機: ${u.phone} | 單位: ${u.job} | 薪資: ${u.salary}</p>
+                    <div class="flex gap-2 mt-4">
+                        ${u.imgs ? Object.keys(u.imgs).map(k => `<img src="${u.imgs[k]}" class="w-16 h-12 object-cover rounded">`).join('') : ''}
+                    </div>
+                    <button onclick="approve('${id}')" class="w-full mt-4 bg-indigo-600 py-2 rounded-xl">通過審核 (設定額度)</button>
+                </div>`;
+            }
+            document.getElementById('userList').innerHTML = html;
+        });
         function approve(id) {
-            const amt = prompt("請輸入核准額度", "30000");
+            const amt = prompt("輸入額度", "30000");
             if(amt) db.ref('users/'+id).update({status: 'official_user', loanLimit: parseInt(amt)});
-        }
-        function del(id) {
-            if(confirm("確定要刪除會員資料嗎？")) db.ref('users/'+id).remove();
         }
     </script>
 </body>
-</html>
