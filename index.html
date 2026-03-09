@@ -2,39 +2,47 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>JOJOPAY | 登入</title>
+    <title>JOJOPAY | 專業金融服務</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>body { background: #0a0a0f; color: white; }</style>
+    <style>
+        body { background: #0a0a0f; color: white; }
+    </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-6">
-    <div id="loginBox" class="max-w-sm w-full bg-[#151520] p-8 rounded-3xl border border-gray-700">
-        <h2 class="text-2xl font-bold mb-6 text-center text-indigo-400">會員登入</h2>
-        <input type="text" id="l_id" placeholder="身分證字號" class="w-full p-4 mb-4 bg-black rounded-xl border border-gray-700">
-        <input type="password" id="l_ph" placeholder="手機號碼" class="w-full p-4 mb-6 bg-black rounded-xl border border-gray-700">
-        <button onclick="login()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold">登入</button>
-        <div class="flex justify-between mt-6 text-sm text-gray-400">
-            <a href="Register.html">會員註冊</a>
-            <button onclick="fgt()">忘記密碼?</button>
+<body>
+    <nav class="p-6 flex justify-between items-center border-b border-gray-800">
+        <h1 class="text-2xl font-bold text-indigo-400">JOJOPAY</h1>
+        <a href="Member.html" class="bg-gray-800 px-4 py-2 rounded-full text-sm">會員中心</a>
+    </nav>
+
+    <main class="text-center py-20 px-6">
+        <span class="bg-indigo-900 text-indigo-200 px-3 py-1 rounded-full text-xs">學生・年輕人首選</span>
+        <h2 class="text-4xl font-bold mt-6 mb-4">資金需求？<br>JOJOPAY 幫你搞定</h2>
+        <p class="text-gray-400 mb-10">簡單、快速、安全，線上申請 3 分鐘完成，最快當日撥款</p>
+        
+        <button onclick="showLogin()" class="bg-indigo-600 px-12 py-4 rounded-full font-bold text-lg hover:bg-indigo-500">立即取得資金 →</button>
+    </main>
+
+    <section class="grid grid-cols-3 gap-4 p-8 border-t border-gray-800 text-center">
+        <div><div class="text-2xl font-bold">10,000+</div><div class="text-xs text-gray-500">服務人次</div></div>
+        <div><div class="text-2xl font-bold">98%</div><div class="text-xs text-gray-500">滿意度</div></div>
+        <div><div class="text-2xl font-bold">24hr</div><div class="text-xs text-gray-500">快速撥款</div></div>
+    </section>
+
+    <div id="loginModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-6">
+        <div class="bg-[#151520] p-8 rounded-3xl w-full max-w-sm border border-gray-700">
+            <h2 class="text-xl font-bold mb-6 text-center">會員登入</h2>
+            <input type="text" placeholder="身分證字號" class="w-full p-4 mb-4 bg-black rounded-xl border border-gray-700">
+            <input type="password" placeholder="密碼(手機)" class="w-full p-4 mb-6 bg-black rounded-xl border border-gray-700">
+            <button class="w-full bg-indigo-600 py-4 rounded-xl font-bold">立即登入</button>
+            <div class="mt-4 flex justify-between text-sm text-gray-400">
+                <a href="Register.html">註冊新會員</a>
+                <span>忘記密碼?</span>
+            </div>
         </div>
     </div>
-    <div id="fgtBox" class="hidden max-w-sm w-full bg-[#151520] p-8 rounded-3xl text-center border border-gray-700">
-        <p class="text-gray-300">連自己的手機號碼都會忘記嗎？請聯繫客服。</p>
-        <button onclick="location.reload()" class="mt-6 w-full bg-gray-700 py-3 rounded-xl">返回</button>
-    </div>
+
     <script>
-        const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        function login() {
-            const id = document.getElementById('l_id').value.trim().toUpperCase();
-            const ph = document.getElementById('l_ph').value.trim();
-            db.ref('users/'+id).once('value', s => {
-                const u = s.val();
-                if(u && u.password === ph) { localStorage.setItem('uId', id); window.location.href="Member.html"; }
-                else alert("帳號密碼錯誤");
-            });
-        }
-        function fgt() { document.getElementById('loginBox').style.display='none'; document.getElementById('fgtBox').style.display='block'; }
+        function showLogin() { document.getElementById('loginModal').classList.remove('hidden'); }
     </script>
 </body>
 </html>
