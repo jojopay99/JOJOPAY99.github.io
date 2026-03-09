@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>會員登入 | JOJOPAY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>body { background: #0a0a0f; color: white; }</style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-sm p-8 bg-[#151520] rounded-3xl border border-gray-700">
+        <h2 class="text-2xl font-bold mb-6 text-center">會員登入</h2>
+        <input type="text" id="l_id" placeholder="身分證字號" class="w-full p-4 mb-4 bg-black rounded-xl border border-gray-700">
+        <input type="password" id="l_ph" placeholder="手機號碼(密碼)" class="w-full p-4 mb-6 bg-black rounded-xl border border-gray-700">
+        <button onclick="login()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold">登入</button>
+        <div class="mt-6 text-center text-sm text-gray-400">
+            還沒註冊嗎？<a href="Register.html" class="text-white underline">前往註冊</a>
+        </div>
+    </div>
+    <script>
+        const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
+        function login() {
+            const id = document.getElementById('l_id').value.trim().toUpperCase();
+            const ph = document.getElementById('l_ph').value.trim();
+            db.ref('users/'+id).once('value', s => {
+                if(s.val() && s.val().password == ph) { localStorage.setItem('uId', id); window.location.href="Member.html"; }
+                else alert("帳號密碼錯誤");
+            });
+        }
+    </script>
+</body>
+</html>
