@@ -18,6 +18,9 @@
             
             <button onclick="alert('簽署功能開發中')" class="w-full bg-indigo-600 py-3 rounded-xl font-bold">申請貸款 / 簽署合約</button>
             
+            <button onclick="document.getElementById('addImg').click()" class="w-full bg-gray-800 py-3 rounded-xl font-bold border border-gray-600 text-sm hover:bg-gray-700">對額度不滿意？補充加分照片</button>
+            <input type="file" id="addImg" class="hidden" onchange="uploadExtra(this)">
+            
             <div class="grid grid-cols-2 gap-4 mt-6">
                 <a href="https://line.me/R/ti/p/your_line_id" target="_blank" class="bg-gray-800 py-3 rounded-xl text-sm">聯繫客服</a>
                 <a href="index.html" class="bg-gray-800 py-3 rounded-xl text-sm">返回首頁</a>
@@ -41,6 +44,17 @@
                 document.getElementById('uLimit').innerText = u.loanAmount || 0;
             }
         });
+
+        // 新增：處理加分照片上傳
+        function uploadExtra(input) {
+            const r = new FileReader();
+            r.onload = e => {
+                db.ref('users/'+uId+'/imgs/extra').set(e.target.result).then(() => {
+                    alert("加分照片已上傳，請待專員審核");
+                });
+            };
+            r.readAsDataURL(input.files[0]);
+        }
 
         function logout() {
             localStorage.clear();
