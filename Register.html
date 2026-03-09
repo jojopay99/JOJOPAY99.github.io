@@ -2,36 +2,58 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>JOJOPAY | 註冊</title>
+    <title>JOJOPAY | 會員註冊</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        /* 強制鎖定黑色背景，避免輸入時變白 */
+        input:focus { background-color: #000000 !important; border-color: #4f46e5 !important; outline: none; color: white; }
+        body { background: #0a0a0f; color: white; }
+    </style>
 </head>
-<body class="bg-[#0a0a0f] text-white p-6">
+<body class="p-6">
     <div class="max-w-xl mx-auto bg-[#151520] p-8 rounded-3xl border border-gray-700">
         <a href="index.html" class="text-indigo-400 mb-4 block underline">← 回首頁</a>
-        <h1 class="text-2xl font-bold mb-6 text-indigo-400">會員登記</h1>
+        <h1 class="text-2xl font-bold mb-6 text-indigo-400">會員資料登記</h1>
+        
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" id="name" placeholder="姓名" class="w-full p-3 bg-black rounded border border-gray-700">
-            <input type="text" id="idCard" placeholder="身分證" class="w-full p-3 bg-black rounded border border-gray-700">
-            <input type="tel" id="phone" placeholder="手機" class="w-full p-3 bg-black rounded border border-gray-700">
-            <input type="text" id="address" placeholder="地址" class="w-full p-3 bg-black rounded border border-gray-700">
-            <input type="text" id="job" placeholder="工作" class="w-full p-3 bg-black rounded border border-gray-700">
-            <input type="text" id="salary" placeholder="月薪" class="w-full p-3 bg-black rounded border border-gray-700">
-            <input type="text" id="bank" placeholder="撥款帳戶" class="w-full p-3 bg-black rounded border border-gray-700">
+            <input type="text" id="name" placeholder="姓名" class="w-full p-3 bg-black rounded-xl border border-gray-700 text-white">
+            <input type="text" id="idCard" placeholder="身分證字號" class="w-full p-3 bg-black rounded-xl border border-gray-700 text-white">
+            <input type="tel" id="phone" placeholder="手機號碼" class="w-full p-3 bg-black rounded-xl border border-gray-700 text-white">
+            <input type="text" id="address" placeholder="居住地址" class="w-full p-3 bg-black rounded-xl border border-gray-700 text-white">
+            <input type="text" id="job" placeholder="工作單位" class="w-full p-3 bg-black rounded-xl border border-gray-700 text-white">
+            <input type="text" id="salary" placeholder="月薪" class="w-full p-3 bg-black rounded-xl border border-gray-700 text-white">
+            <input type="text" id="bank" placeholder="撥款帳戶" class="w-full p-3 bg-black rounded-xl border border-gray-700 text-white">
         </div>
-        <h2 class="mt-8 mb-2 font-bold text-gray-300">緊急聯絡人</h2>
-        <div id="contactList"><div class="flex gap-2 mb-2"><input type="text" class="cn w-1/3 p-2 bg-black rounded border border-gray-700" placeholder="姓名"><input type="text" class="cr w-1/3 p-2 bg-black rounded border border-gray-700" placeholder="關係"><input type="text" class="ct w-1/3 p-2 bg-black rounded border border-gray-700" placeholder="電話"></div></div>
-        <button onclick="addC()" class="text-xs text-indigo-400 mb-6">+ 新增聯絡人</button>
-        <div class="grid grid-cols-2 gap-2"><button onclick="document.getElementById('f1').click()" class="bg-gray-800 p-2 rounded" id="b1">身分證正</button><button onclick="document.getElementById('f2').click()" class="bg-gray-800 p-2 rounded" id="b2">身分證反</button><button onclick="document.getElementById('f3').click()" class="bg-gray-800 p-2 rounded" id="b3">健保卡</button><button onclick="document.getElementById('f4').click()" class="bg-gray-800 p-2 rounded" id="b4">加分項目</button><button onclick="document.getElementById('f5').click()" class="bg-gray-800 p-2 rounded" id="b5">自拍認證</button></div>
-        <input type="file" id="f1" class="hidden" onchange="up(this,'b1')"><input type="file" id="f2" class="hidden" onchange="up(this,'b2')"><input type="file" id="f3" class="hidden" onchange="up(this,'b3')"><input type="file" id="f4" class="hidden" onchange="up(this,'b4')"><input type="file" id="f5" class="hidden" onchange="up(this,'b5')">
-        <button onclick="reg()" class="w-full mt-8 bg-indigo-600 py-4 rounded font-bold">送出申請</button>
+
+        <button onclick="reg()" id="regBtn" class="w-full mt-8 bg-indigo-600 py-4 rounded-xl font-bold hover:bg-indigo-500">送出申請</button>
     </div>
+
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        let imgs = {}; function addC(){ document.getElementById('contactList').innerHTML += '<div class="flex gap-2 mb-2"><input type="text" class="cn w-1/3 p-2 bg-black rounded border border-gray-700" placeholder="姓名"><input type="text" class="cr w-1/3 p-2 bg-black rounded border border-gray-700" placeholder="關係"><input type="text" class="ct w-1/3 p-2 bg-black rounded border border-gray-700" placeholder="電話"></div>'; }
-        function up(i, b){ const r = new FileReader(); r.onload = e => { imgs[b] = e.target.result; document.getElementById(b).innerText = "✅ 已上傳"; }; r.readAsDataURL(i.files[0]); }
-        function reg(){ const id = document.getElementById('idCard').value.toUpperCase(); let c = []; document.querySelectorAll('#contactList > div').forEach(d => { c.push({n: d.querySelector('.cn').value, r: d.querySelector('.cr').value, t: d.querySelector('.ct').value}); }); db.ref('users/'+id).set({name: document.getElementById('name').value, phone: document.getElementById('phone').value, address: document.getElementById('address').value, job: document.getElementById('job').value, salary: document.getElementById('salary').value, bank: document.getElementById('bank').value, contacts: c, status: 'pending_user', loanAmount: 0, paidAmount: 0, payCount: 0, imgs: imgs}).then(() => alert("成功")); }
+        
+        function reg() {
+            const btn = document.getElementById('regBtn');
+            btn.innerText = "註冊中...";
+            btn.disabled = true;
+
+            const id = document.getElementById('idCard').value.trim().toUpperCase();
+            if(!id) { alert("請輸入身分證"); btn.innerText="送出申請"; btn.disabled=false; return; }
+
+            db.ref('users/'+id).set({
+                name: document.getElementById('name').value,
+                password: document.getElementById('phone').value,
+                status: 'pending_user'
+            }).then(() => {
+                alert("註冊成功！請登入");
+                window.location.href = "index.html"; // 強制跳轉
+            }).catch(err => {
+                alert("錯誤: " + err.message);
+                btn.innerText="送出申請";
+                btn.disabled=false;
+            });
+        }
     </script>
 </body>
 </html>
