@@ -6,58 +6,44 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>
-        body { background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%); color: white; min-height: 100vh; }
-        .form-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px; }
-        .input-box { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; padding: 12px; border-radius: 12px; color: white; }
-        .upload-item { background: rgba(255, 255, 255, 0.03); border: 2px dashed rgba(255, 255, 255, 0.15); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 16 / 10; cursor: pointer; }
-    </style>
 </head>
-<body class="p-4 pb-24">
-    <div class="max-w-md mx-auto">
-        <h1 class="text-xl font-bold text-indigo-400 mb-6 text-center">JOJOPAY 會員註冊</h1>
-        <div class="form-card p-6 space-y-6">
-            <section class="space-y-3">
-                <h2 class="font-bold text-indigo-300 border-l-4 border-indigo-500 pl-2">基本資料</h2>
-                <input type="text" id="name" class="input-box" placeholder="真實姓名">
-                <input type="text" id="idCard" class="input-box" placeholder="身分證字號 (帳號)">
-                <input type="tel" id="phone" class="input-box" placeholder="手機號碼 (密碼)">
-                <input type="text" id="address" class="input-box" placeholder="居住地址">
-                <input type="text" id="job" class="input-box" placeholder="工作單位">
-                <input type="text" id="salary" class="input-box" placeholder="月薪">
-                <input type="text" id="contact" class="input-box" placeholder="緊急聯絡人姓名/電話">
-            </section>
-            <section class="space-y-3">
-                <h2 class="font-bold text-indigo-300 border-l-4 border-indigo-500 pl-2">證件上傳</h2>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="upload-item" onclick="document.getElementById('f1').click()"><span id="t-f1" class="text-xs">🪪 正面</span><input type="file" id="f1" class="hidden" onchange="preview(this, 'f1')"></div>
-                    <div class="upload-item" onclick="document.getElementById('f2').click()"><span id="t-f2" class="text-xs">🪪 反面</span><input type="file" id="f2" class="hidden" onchange="preview(this, 'f2')"></div>
-                    <div class="upload-item" onclick="document.getElementById('f3').click()"><span id="t-f3" class="text-xs">🏦 存摺</span><input type="file" id="f3" class="hidden" onchange="preview(this, 'f3')"></div>
-                    <div class="upload-item" onclick="document.getElementById('f5').click()"><span id="t-f5" class="text-xs text-pink-400">🤳 自拍</span><input type="file" id="f5" class="hidden" onchange="preview(this, 'f5')"></div>
-                </div>
-                <p class="text-center text-xs text-gray-400 mt-2">點擊上方自拍可查看教學</p>
-            </section>
-            <button onclick="submitAll()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold shadow-lg">確認送出申請</button>
+<body class="bg-gray-900 text-white p-6 min-h-screen">
+    <div class="max-w-xl mx-auto bg-gray-800 p-8 rounded-3xl shadow-2xl border border-gray-700">
+        <h1 class="text-2xl font-bold mb-6 text-indigo-400">會員完整資料登記</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="name" placeholder="真實姓名" class="w-full p-3 bg-gray-900 rounded-xl border border-gray-700">
+            <input type="text" id="idCard" placeholder="身分證字號 (帳號)" class="w-full p-3 bg-gray-900 rounded-xl border border-gray-700">
+            <input type="tel" id="phone" placeholder="手機號碼 (密碼)" class="w-full p-3 bg-gray-900 rounded-xl border border-gray-700">
+            <input type="text" id="address" placeholder="居住地址" class="w-full p-3 bg-gray-900 rounded-xl border border-gray-700">
+            <input type="text" id="job" placeholder="工作單位" class="w-full p-3 bg-gray-900 rounded-xl border border-gray-700">
+            <input type="text" id="salary" placeholder="月薪" class="w-full p-3 bg-gray-900 rounded-xl border border-gray-700">
+            <input type="text" id="contact" placeholder="緊急聯絡人" class="w-full p-3 bg-gray-900 rounded-xl border border-gray-700">
+            <input type="text" id="bank" placeholder="撥款銀行及帳號" class="w-full p-3 bg-gray-900 rounded-xl border border-gray-700">
         </div>
+        <div class="grid grid-cols-2 gap-4 mt-6">
+            <button onclick="document.getElementById('f1').click()" class="bg-gray-700 p-4 rounded-xl text-sm">身分證正面</button>
+            <button onclick="document.getElementById('f2').click()" class="bg-gray-700 p-4 rounded-xl text-sm">身分證反面</button>
+            <button onclick="document.getElementById('f3').click()" class="bg-gray-700 p-4 rounded-xl text-sm">健保卡</button>
+            <button onclick="document.getElementById('f5').click()" class="bg-gray-700 p-4 rounded-xl text-sm">自拍/教學</button>
+        </div>
+        <input type="file" id="f1" class="hidden" onchange="read(this,'f1')"><input type="file" id="f2" class="hidden" onchange="read(this,'f2')">
+        <input type="file" id="f3" class="hidden" onchange="read(this,'f3')"><input type="file" id="f5" class="hidden" onchange="read(this,'f5')">
+        <button onclick="reg()" class="w-full mt-8 bg-indigo-600 py-4 rounded-xl font-bold text-lg hover:bg-indigo-500 transition">送出申請</button>
+        <a href="index.html" class="block text-center mt-4 text-gray-400 underline">返回登入頁</a>
     </div>
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        let imgData = {};
-        function preview(input, id) {
-            const reader = new FileReader();
-            reader.onload = e => { imgData[id] = e.target.result; document.getElementById('t-'+id).innerText = "✅ 已上傳"; }
-            reader.readAsDataURL(input.files[0]);
-        }
-        function submitAll() {
+        let imgs = {};
+        function read(input, id) { const r = new FileReader(); r.onload = e => imgs[id] = e.target.result; r.readAsDataURL(input.files[0]); }
+        function reg() {
             const id = document.getElementById('idCard').value.trim().toUpperCase();
             const ph = document.getElementById('phone').value.trim();
-            if(!id || !ph) return alert("身分證與手機號碼為必填！");
-            db.ref('users/' + id).set({
+            db.ref('users/'+id).set({
                 name: document.getElementById('name').value, idCard: id, phone: ph, password: ph,
                 address: document.getElementById('address').value, job: document.getElementById('job').value,
                 salary: document.getElementById('salary').value, contact: document.getElementById('contact').value,
-                status: 'pending_user', loanLimit: 0, imgs: imgData
-            }).then(() => { alert("註冊成功！"); window.location.href="index.html"; });
+                bank: document.getElementById('bank').value, status: 'pending_user', loanLimit: 0, imgs: imgs
+            }).then(() => { alert("註冊成功"); window.location.href="index.html"; });
         }
     </script>
 </body>
