@@ -1,10 +1,18 @@
-<body class="bg-gray-900 text-white p-6"><div id="ui" class="text-center mt-20">讀取中...</div>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-<script>
-const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-const id = localStorage.getItem('uId');
-db.ref('users/'+id).on('value', s => {
-const u = s.val();
-document.getElementById('ui').innerHTML = `<h1>${u.name} 您好</h1><p>狀態: ${u.status}</p><p>核准額度: $${u.loanLimit}</p>`;
-});
-</script></body>
+<body class="bg-gray-900 text-white p-6">
+    <div id="ui" class="max-w-md mx-auto bg-gray-800 p-8 rounded-3xl mt-10 text-center">讀取資料中...</div>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script>
+        const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
+        const id = localStorage.getItem('uId');
+        if(!id) window.location.href="index.html";
+        db.ref('users/'+id).on('value', s => {
+            const u = s.val();
+            document.getElementById('ui').innerHTML = `
+                <h1 class="text-2xl font-bold">${u.name}</h1>
+                <p class="mt-4">狀態: ${u.status}</p>
+                <p class="text-3xl font-bold mt-2">$${u.loanLimit}</p>
+            `;
+        });
+    </script>
+</body>
