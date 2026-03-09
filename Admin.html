@@ -2,52 +2,57 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>JOJOPAY | 管理後台</title>
+    <title>JOJOPAY | 高級管理後台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         body { background: #0a0a14; color: white; }
-        .stat-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; }
-        .active-filter { border-color: #6366f1; background: rgba(99, 102, 241, 0.2) !important; }
-        .btn-action { font-size: 0.75rem; padding: 6px 12px; border-radius: 8px; font-weight: bold; }
+        .stat-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: 0.3s; }
+        .active-filter { border-color: #6366f1; background: rgba(99, 102, 241, 0.2) !important; box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+        .btn-action { font-size: 0.75rem; padding: 8px 16px; border-radius: 10px; font-weight: bold; transition: 0.2s; }
+        .btn-action:hover { opacity: 0.8; transform: translateY(-1px); }
+        .img-preview { width: 80px; height: 50px; object-fit: cover; border-radius: 4px; cursor: zoom-in; border: 1px solid rgba(255,255,255,0.1); }
+        .img-preview:hover { transform: scale(3); position: relative; z-index: 50; }
     </style>
 </head>
-<body class="p-8">
+<body class="p-4 md:p-8">
+
     <div id="loginBox" class="max-w-sm mx-auto mt-32 p-8 bg-gray-800 rounded-2xl border border-gray-700 text-center">
-        <h2 class="text-xl font-bold text-indigo-400 mb-6">後台管理登入</h2>
-        <input type="password" id="admP" placeholder="管理密碼" class="w-full p-4 mb-6 bg-gray-900 border border-gray-600 rounded-xl text-center outline-none text-white">
-        <button onclick="adminLogin()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold">進入系統</button>
+        <h2 class="text-xl font-bold text-indigo-400 mb-6">後台管理系統</h2>
+        <input type="password" id="admP" placeholder="請輸入管理密碼" class="w-full p-4 mb-6 bg-gray-900 border border-gray-600 rounded-xl text-center outline-none text-white">
+        <button onclick="adminLogin()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold">登入後台</button>
     </div>
 
     <div id="adminPanel" class="hidden max-w-6xl mx-auto">
         <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-10">
-            <div class="stat-card p-4 rounded-xl text-center active-filter" onclick="filterList('pending_user')" id="btn-pending_user">
+            <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('pending_user')" id="btn-pending_user">
                 <p class="text-pink-400 text-xs font-bold">資格待審</p>
                 <h3 class="text-2xl font-black" id="c-puser">0</h3>
             </div>
             <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('official_user')" id="btn-official_user">
-                <p class="text-green-400 text-xs font-bold">已過審</p>
+                <p class="text-green-400 text-xs font-bold">已過初審</p>
                 <h3 class="text-2xl font-black" id="c-official">0</h3>
             </div>
             <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('pending_loan')" id="btn-pending_loan">
-                <p class="text-yellow-400 text-xs font-bold">貸款待審</p>
+                <p class="text-yellow-400 text-xs font-bold">提現審核</p>
                 <h3 class="text-2xl font-black" id="c-ploan">0</h3>
             </div>
             <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('active')" id="btn-active">
-                <p class="text-indigo-400 text-xs font-bold">線上會員</p>
+                <p class="text-indigo-400 text-xs font-bold">還款中</p>
                 <h3 class="text-2xl font-black" id="c-active">0</h3>
             </div>
             <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('finished')" id="btn-finished">
-                <p class="text-gray-400 text-xs font-bold">正常下車</p>
+                <p class="text-gray-400 text-xs font-bold">結案</p>
                 <h3 class="text-2xl font-black" id="c-finished">0</h3>
             </div>
             <div class="stat-card p-4 rounded-xl text-center" onclick="filterList('bad')" id="btn-bad">
-                <p class="text-red-500 text-xs font-bold">呆帳名單</p>
+                <p class="text-red-500 text-xs font-bold">黑名單</p>
                 <h3 class="text-2xl font-black" id="c-bad">0</h3>
             </div>
         </div>
-        <div id="userList" class="space-y-4"></div>
+
+        <div id="userList" class="space-y-6"></div>
     </div>
 
     <script>
@@ -74,9 +79,9 @@
         }
 
         function updateCounts() {
-            let counts = { 'pending_user':0, 'official_user':0, 'pending_loan':0, 'active':0, 'finished':0, 'bad':0 };
+            const counts = { 'pending_user':0, 'official_user':0, 'pending_loan':0, 'active':0, 'finished':0, 'bad':0 };
             for(let id in users) {
-                const s = users[id].status || 'pending_user'; // 舊會員預設待審
+                const s = users[id].status || 'pending_user';
                 if(counts.hasOwnProperty(s)) counts[s]++;
             }
             document.getElementById('c-puser').innerText = counts['pending_user'];
@@ -92,7 +97,7 @@
             const area = document.getElementById('userList');
             let html = '';
             document.querySelectorAll('.stat-card').forEach(el => el.classList.remove('active-filter'));
-            document.getElementById('btn-' + type).classList.add('active-filter');
+            if(document.getElementById('btn-' + type)) document.getElementById('btn-' + type).classList.add('active-filter');
 
             for(let id in users) {
                 const u = users[id];
@@ -100,24 +105,58 @@
                 if(s !== type) continue;
 
                 html += `
-                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div class="flex-1">
-                        <p class="text-xl font-bold">${u.name || '無名氏'} <span class="text-xs text-gray-500 font-mono">(${id})</span></p>
-                        <p class="text-sm text-gray-400 mt-1">ID: ${u.idCard || '未填'}</p>
-                        <p class="text-sm text-gray-400">銀行: ${u.bank || '未填'}</p>
+                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                        <div class="flex-1">
+                            <span class="text-[10px] bg-indigo-900/50 text-indigo-300 px-2 py-1 rounded mb-2 inline-block">會員手機: ${id}</span>
+                            <p class="text-2xl font-bold text-white">${u.name || '未填姓名'} <span class="text-sm font-normal text-gray-400 pl-2">${u.idCard || ''}</span></p>
+                            <p class="text-indigo-400 font-bold mt-1">目前核准額度: $${u.loanLimit || 0}</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${type === 'pending_user' ? `<button onclick="approveWithAmount('${id}')" class="btn-action bg-green-600 text-white">✅ 通過初審並給額度</button>` : ''}
+                            ${type === 'official_user' ? `<button onclick="updateSt('${id}', 'pending_loan')" class="btn-action bg-yellow-600 text-black">📩 設為提現中</button>` : ''}
+                            ${type === 'pending_loan' ? `<button onclick="updateSt('${id}', 'active')" class="btn-action bg-indigo-600 text-white">💰 確認撥款(轉還款中)</button>` : ''}
+                            <button onclick="del('${id}')" class="btn-action bg-red-900/50 text-red-200">🗑️ 刪除</button>
+                        </div>
                     </div>
-                    <div class="flex gap-2">
-                        ${type === 'pending_user' ? `<button onclick="updateSt('${id}', 'official_user')" class="btn-action bg-green-600">通過資格</button>` : ''}
-                        ${type === 'official_user' ? `<button onclick="updateSt('${id}', 'pending_loan')" class="btn-action bg-yellow-600">進入貸款審核</button>` : ''}
-                        <button onclick="del('${id}')" class="btn-action bg-red-900">刪除</button>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-700">
+                        <div class="text-sm space-y-1 text-gray-300">
+                            <p>🏦 銀行帳戶：<span class="text-white font-mono">${u.bank || '未提供'}</span></p>
+                            <p>🏢 工作資訊：<span class="text-white">${u.job || '未填'} / ${u.salary || '0'}元</span></p>
+                            <p>📞 緊急聯絡：<span class="text-white">${u.contactName || '未填'} (${u.contactRel || ''}) - ${u.contactPhone || ''}</span></p>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            ${u.img_f1 ? `<img src="${u.img_f1}" class="img-preview" title="身分證正面">` : ''}
+                            ${u.img_f2 ? `<img src="${u.img_f2}" class="img-preview" title="身分證反面">` : ''}
+                            ${u.img_f3 ? `<img src="${u.img_f3}" class="img-preview" title="存摺封面">` : ''}
+                            ${u.img_f5 ? `<img src="${u.img_f5}" class="img-preview border-pink-500/50" title="手持自拍">` : ''}
+                        </div>
                     </div>
                 </div>`;
             }
-            area.innerHTML = html || '<div class="text-center py-20 text-gray-600">目前沒有資料</div>';
+            area.innerHTML = html || '<div class="text-center py-20 text-gray-500 tracking-widest text-lg">該類別目前尚無會員資料</div>';
         }
 
-        function updateSt(id, s) { db.ref('users/'+id).update({ status: s }).then(() => alert("狀態更新成功")); }
-        function del(id) { if(confirm("確定刪除？")) db.ref('users/'+id).remove(); }
+        function approveWithAmount(id) {
+            const amt = prompt("請設定該會員的核准額度 (將同步顯示在會員中心)：", "20000");
+            if (amt !== null && amt !== "") {
+                db.ref('users/'+id).update({ 
+                    status: 'official_user',
+                    loanLimit: parseInt(amt)
+                }).then(() => alert("初審通過！額度已設定為 $" + amt));
+            }
+        }
+
+        function updateSt(id, s) { 
+            db.ref('users/'+id).update({ status: s }).then(() => alert("狀態更新成功")); 
+        }
+
+        function del(id) { 
+            if(confirm("警告：確定要永久刪除此會員的所有資料嗎？")) {
+                db.ref('users/'+id).remove().then(() => alert("資料已刪除"));
+            }
+        }
     </script>
 </body>
 </html>
