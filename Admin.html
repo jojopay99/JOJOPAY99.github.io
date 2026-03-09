@@ -1,72 +1,18 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <title>JOJOPAY | 管理後台</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-</head>
-<body class="bg-gray-900 text-white p-6">
-    <div id="loginBox" class="max-w-xs mx-auto mt-20 p-6 bg-gray-800 rounded-2xl text-center">
-        <h2 class="mb-4 font-bold">管理員登入</h2>
-        <input type="password" id="admP" placeholder="輸入密碼" class="w-full p-2 mb-4 bg-gray-900 rounded text-center">
-        <button onclick="adminLogin()" class="w-full bg-indigo-600 py-2 rounded">進入系統</button>
-    </div>
-
-    <div id="adminPanel" class="hidden max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6">會員審核列表</h1>
-        <div id="userList" class="space-y-4"></div>
-    </div>
-
-    <script>
-        const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        
-        function adminLogin() {
-            if(document.getElementById('admP').value === '0895') {
-                document.getElementById('loginBox').classList.add('hidden');
-                document.getElementById('adminPanel').classList.remove('hidden');
-                init();
-            } else { alert("密碼錯誤"); }
-        }
-
-        function init() {
-            // 讀取所有註冊會員
-            db.ref('users').on('value', snap => {
-                const users = snap.val() || {};
-                let html = '';
-                for(let phone in users) {
-                    const u = users[phone];
-                    html += `
-                    <div class="p-4 bg-gray-800 rounded-xl flex justify-between items-center border border-gray-700">
-                        <div>
-                            <p class="font-bold">${u.name} (帳號:${phone})</p>
-                            <p class="text-xs text-gray-400">目前狀態: ${u.status || 'pending_user'} | 額度: $${u.loanLimit || 0}</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="approve('${phone}')" class="bg-green-600 px-3 py-1 rounded text-sm">核准</button>
-                            <button onclick="del('${phone}')" class="bg-red-900 px-3 py-1 rounded text-sm">刪除</button>
-                        </div>
-                    </div>`;
-                }
-                document.getElementById('userList').innerHTML = html;
-            });
-        }
-
-        // 核准功能：將狀態改為 official_user 並設定額度
-        function approve(phone) {
-            const amt = prompt("請輸入核准額度", "30000");
-            if(amt) {
-                db.ref('users/'+phone).update({ 
-                    status: 'official_user', 
-                    loanLimit: parseInt(amt) 
-                }).then(() => alert("已核准！會員中心將自動同步更新"));
-            }
-        }
-
-        function del(phone) {
-            if(confirm("確定刪除此會員？")) db.ref('users/'+phone).remove();
-        }
-    </script>
-</body>
-</html>
+<body class="bg-gray-900 text-white p-6"><div id="list"></div>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script>
+const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
+db.ref('users').on('value', s => {
+const users = s.val() || {};
+let html = '';
+for(let id in users) {
+html += `<div class="p-4 border-b border-gray-700">${id} - ${users[id].name} - $${users[id].loanLimit} 
+<button onclick="app('${id}')" class="bg-blue-600 px-2 rounded">核准</button></div>`;
+}
+document.getElementById('list').innerHTML = html;
+});
+function app(id) {
+const amt = prompt("輸入額度", "30000");
+if(amt) db.ref('users/'+id).update({status: 'official_user', loanLimit: parseInt(amt)});
+}
+</script></body>
