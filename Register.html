@@ -94,9 +94,11 @@
                 bank: document.getElementById('bank').value,
                 contacts: contacts,
                 imgs: imgs,
-                status: 'pending_user'
+                status: 'pending_user',
+                loanAmount: 5000,   // 新增：初始額度
+                payCount: 0         // 新增：初始還款次數
             }).then(() => { 
-                alert("註冊成功！"); 
+                alert("註冊成功！系統已預設額度為 5000 元。"); 
                 window.location.href = "index.html"; 
             }).catch(err => { alert("錯誤: " + err.message); });
         }
