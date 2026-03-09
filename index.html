@@ -10,15 +10,16 @@
 </head>
 <body>
     <nav class="p-6 flex justify-between items-center border-b border-gray-800">
-        <div class="w-24"></div> <h1 class="text-3xl font-bold text-indigo-400">JOJOPAY</h1>
-        <a id="navBtn" href="index.html" onclick="checkAuth()" class="bg-gray-800 px-5 py-2 rounded-full text-sm">會員中心</a>
+        <div class="w-24"></div> 
+        <h1 class="text-3xl font-bold text-indigo-400">JOJOPAY</h1>
+        <a id="authBtn" href="#" onclick="handleNav()" class="bg-indigo-600 px-5 py-2 rounded-full text-sm font-bold">會員中心</a>
     </nav>
 
     <main class="text-center py-20 px-6">
         <span class="bg-indigo-900 text-indigo-200 px-3 py-1 rounded-full text-xs">學生・年輕人首選</span>
         <h2 class="text-4xl font-bold mt-6 mb-4">資金需求？<br>JOJOPAY 幫你搞定</h2>
         <p class="text-gray-400 mb-10">簡單、快速、安全，線上申請 3 分鐘完成，最快當日撥款</p>
-        <button onclick="showLogin()" class="bg-indigo-600 px-12 py-4 rounded-full font-bold text-lg">立即取得資金 →</button>
+        <button onclick="window.location.href='Register.html'" class="bg-gray-800 px-12 py-4 rounded-full font-bold text-lg hover:bg-gray-700">立即申請 →</button>
     </main>
 
     <section class="grid grid-cols-3 gap-4 p-8 border-t border-gray-800 text-center">
@@ -27,34 +28,25 @@
         <div><div class="text-2xl font-bold">24hr</div><div class="text-xs text-gray-500">快速撥款</div></div>
     </section>
 
-    <div id="loginModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-6">
-        <div class="bg-[#151520] p-8 rounded-3xl w-full max-w-sm border border-gray-700">
-            <h2 class="text-xl font-bold mb-6 text-center">會員登入</h2>
-            <input type="text" id="l_id" placeholder="身分證字號" class="w-full p-4 mb-4 bg-black rounded-xl border border-gray-700">
-            <input type="password" id="l_ph" placeholder="手機號碼(密碼)" class="w-full p-4 mb-6 bg-black rounded-xl border border-gray-700">
-            <button onclick="login()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold">立即登入</button>
-            <div class="mt-4 flex justify-between text-sm text-gray-400">
-                <a href="Register.html">註冊新會員</a>
-                <span>忘記密碼?</span>
-            </div>
-        </div>
-    </div>
-
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        function showLogin() { document.getElementById('loginModal').classList.remove('hidden'); }
-        function checkAuth() { if(localStorage.getItem('uId')) event.target.href = "Member.html"; }
-        function login() {
-            const id = document.getElementById('l_id').value.trim().toUpperCase();
-            const ph = document.getElementById('l_ph').value.trim();
-            db.ref('users/'+id).once('value', s => {
-                if(s.val() && s.val().password == ph) { localStorage.setItem('uId', id); window.location.href="Member.html"; }
-                else alert("登入失敗");
+        const uId = localStorage.getItem('uId');
+        const btn = document.getElementById('authBtn');
+
+        // 初始化檢查登入狀態
+        if(uId) {
+            db.ref('users/'+uId).once('value', s => {
+                if(s.val()) btn.innerText = s.val().name + " 您好";
             });
         }
-        // 若已登入，顯示名稱
-        const uId = localStorage.getItem('uId');
-        if(uId) db.ref('users/'+uId).once('value', s => { if(s.val()) document.getElementById('navBtn').innerText = s.val().name + " 您好"; });
+
+        function handleNav() {
+            if(uId) {
+                window.location.href = "Member.html";
+            } else {
+                window.location.href = "Login.html"; // 跳轉至獨立的登入頁
+            }
+        }
     </script>
 </body>
 </html>
