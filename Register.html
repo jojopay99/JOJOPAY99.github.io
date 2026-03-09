@@ -7,8 +7,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        /* 強制鎖定黑色背景，避免點擊時變白 */
-        input:focus { background-color: #000000 !important; border-color: #4f46e5 !important; outline: none; color: white !important; }
+        /* 強制鎖定黑色背景，防止變白 */
+        input:focus { background-color: #000000 !important; border-color: #4f46e5 !important; color: white !important; outline: none; }
         body { background: #0a0a0f; color: white; }
     </style>
 </head>
@@ -52,7 +52,7 @@
         <input type="file" id="f4" class="hidden" onchange="up(this,'f4')">
         <input type="file" id="f5" class="hidden" onchange="up(this,'f5')">
         
-        <button onclick="reg()" id="regBtn" class="w-full mt-8 bg-indigo-600 py-4 rounded-xl font-bold hover:bg-indigo-500">送出申請</button>
+        <button onclick="reg()" class="w-full mt-8 bg-indigo-600 py-4 rounded-xl font-bold hover:bg-indigo-500 text-white">送出申請</button>
     </div>
 
     <script>
@@ -75,6 +75,31 @@
         function reg() {
             let contacts = [];
             document.querySelectorAll('#contactList > div').forEach(d => {
-                contacts.push({name: d.querySelector('.contact-name').value, rel: d.querySelector('.contact-rel').value, tel: d.querySelector('.contact-tel').value});
+                contacts.push({
+                    name: d.querySelector('.contact-name').value, 
+                    rel: d.querySelector('.contact-rel').value, 
+                    tel: d.querySelector('.contact-tel').value
+                });
             });
-            const id
+
+            const id = document.getElementById('idCard').value.trim().toUpperCase();
+            if(!id) { alert("請填寫身分證字號"); return; }
+            
+            db.ref('users/'+id).set({
+                name: document.getElementById('name').value,
+                password: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                job: document.getElementById('job').value,
+                salary: document.getElementById('salary').value,
+                bank: document.getElementById('bank').value,
+                contacts: contacts,
+                imgs: imgs,
+                status: 'pending_user'
+            }).then(() => { 
+                alert("註冊成功！"); 
+                window.location.href = "index.html"; 
+            }).catch(err => { alert("錯誤: " + err.message); });
+        }
+    </script>
+</body>
+</html>
