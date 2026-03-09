@@ -2,51 +2,47 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>JOJOPAY | 會員註冊</title>
+    <title>JOJOPAY | 註冊</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>body { background: #0a0a0f; color: white; }</style>
 </head>
-<body class="bg-gray-900 text-white p-6">
-    <div class="max-w-lg mx-auto bg-gray-800 p-8 rounded-3xl border border-gray-700">
-        <h1 class="text-2xl font-bold mb-6">會員註冊申請</h1>
+<body class="p-6">
+    <div class="max-w-xl mx-auto bg-[#151520] p-8 rounded-3xl border border-gray-700">
+        <h1 class="text-2xl font-bold mb-6 text-indigo-400">會員資料登記</h1>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" id="name" placeholder="姓名" class="w-full p-3 bg-gray-900 rounded-lg border border-gray-700">
-            <input type="text" id="idCard" placeholder="身分證(帳號)" class="w-full p-3 bg-gray-900 rounded-lg border border-gray-700">
-            <input type="tel" id="phone" placeholder="手機(密碼)" class="w-full p-3 bg-gray-900 rounded-lg border border-gray-700">
-            <input type="text" id="address" placeholder="居住地址" class="w-full p-3 bg-gray-900 rounded-lg border border-gray-700">
-            <input type="text" id="job" placeholder="工作單位" class="w-full p-3 bg-gray-900 rounded-lg border border-gray-700">
-            <input type="text" id="salary" placeholder="月薪" class="w-full p-3 bg-gray-900 rounded-lg border border-gray-700">
-            <input type="text" id="contact" placeholder="緊急聯絡人" class="w-full p-3 bg-gray-900 rounded-lg border border-gray-700">
-            <input type="text" id="bank" placeholder="撥款帳戶" class="w-full p-3 bg-gray-900 rounded-lg border border-gray-700">
+            <input type="text" id="name" placeholder="姓名" class="w-full p-3 bg-black rounded-xl border border-gray-700">
+            <input type="text" id="idCard" placeholder="身分證(帳號)" class="w-full p-3 bg-black rounded-xl border border-gray-700">
+            <input type="tel" id="phone" placeholder="手機(密碼)" class="w-full p-3 bg-black rounded-xl border border-gray-700">
+            <input type="text" id="address" placeholder="居住地址" class="w-full p-3 bg-black rounded-xl border border-gray-700">
+            <input type="text" id="job" placeholder="工作單位" class="w-full p-3 bg-black rounded-xl border border-gray-700">
+            <input type="text" id="salary" placeholder="月薪" class="w-full p-3 bg-black rounded-xl border border-gray-700">
+            <input type="text" id="contact" placeholder="緊急聯絡人" class="w-full p-3 bg-black rounded-xl border border-gray-700">
+            <input type="text" id="bank" placeholder="撥款帳戶" class="w-full p-3 bg-black rounded-xl border border-gray-700">
         </div>
         <div class="grid grid-cols-2 gap-4 mt-6">
-            <button onclick="document.getElementById('f1').click()" class="bg-gray-700 p-4 rounded-xl text-sm" id="btn-f1">身分證正面</button>
-            <button onclick="document.getElementById('f2').click()" class="bg-gray-700 p-4 rounded-xl text-sm" id="btn-f2">身分證反面</button>
-            <button onclick="document.getElementById('f3').click()" class="bg-gray-700 p-4 rounded-xl text-sm" id="btn-f3">健保卡</button>
-            <button onclick="document.getElementById('f5').click()" class="bg-gray-700 p-4 rounded-xl text-sm" id="btn-f5">自拍照片</button>
+            <button onclick="document.getElementById('f1').click()" class="bg-gray-800 p-4 rounded-xl text-sm" id="btn-f1">身分證正面</button>
+            <button onclick="document.getElementById('f2').click()" class="bg-gray-800 p-4 rounded-xl text-sm" id="btn-f2">身分證反面</button>
+            <button onclick="document.getElementById('f3').click()" class="bg-gray-800 p-4 rounded-xl text-sm" id="btn-f3">健保卡</button>
+            <button onclick="document.getElementById('f5').click()" class="bg-gray-800 p-4 rounded-xl text-sm" id="btn-f5">自拍/教學</button>
         </div>
         <input type="file" id="f1" class="hidden" onchange="up(this,'f1')"><input type="file" id="f2" class="hidden" onchange="up(this,'f2')">
         <input type="file" id="f3" class="hidden" onchange="up(this,'f3')"><input type="file" id="f5" class="hidden" onchange="up(this,'f5')">
-        <button onclick="reg()" class="w-full mt-8 bg-indigo-600 py-4 rounded-xl font-bold">確認送出申請</button>
+        <button onclick="reg()" class="w-full mt-8 bg-indigo-600 py-4 rounded-xl font-bold">送出申請</button>
     </div>
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
         let imgs = {};
-        function up(input, id) { 
-            const r = new FileReader(); 
-            r.onload = e => { imgs[id] = e.target.result; document.getElementById('btn-'+id).innerText = "✅ 已上傳"; }; 
-            r.readAsDataURL(input.files[0]); 
-        }
+        function up(input, id) { const r = new FileReader(); r.onload = e => { imgs[id] = e.target.result; document.getElementById('btn-'+id).innerText = "✅ 已上傳"; }; r.readAsDataURL(input.files[0]); }
         function reg() {
             const id = document.getElementById('idCard').value.trim().toUpperCase();
-            const ph = document.getElementById('phone').value.trim();
             db.ref('users/'+id).set({
-                name: document.getElementById('name').value, idCard: id, phone: ph, password: ph,
+                name: document.getElementById('name').value, idCard: id, phone: document.getElementById('phone').value, password: document.getElementById('phone').value,
                 address: document.getElementById('address').value, job: document.getElementById('job').value,
                 salary: document.getElementById('salary').value, contact: document.getElementById('contact').value,
                 bank: document.getElementById('bank').value, status: 'pending_user', loanLimit: 0, imgs: imgs
-            }).then(() => { alert("註冊完成"); window.location.href="index.html"; });
+            }).then(() => { alert("申請成功"); window.location.href="index.html"; });
         }
     </script>
 </body>
