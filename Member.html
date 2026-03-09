@@ -3,20 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <title>會員中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>body { background: #0a0a0f; color: white; padding: 40px; text-align: center; }</style>
+    <style>body { background: #0a0a0f; color: white; }</style>
 </head>
-<body>
-    <div id="ui" style="max-width: 400px; margin: auto; background: #151520; padding: 30px; border-radius: 20px;">載入中...</div>
+<body class="p-8">
+    <div class="max-w-md mx-auto bg-[#151520] p-8 rounded-3xl border border-gray-700 text-center">
+        <h1 id="userName" class="text-2xl font-bold mb-4">讀取中...</h1>
+        <div id="ui" class="space-y-4">載入狀態中...</div>
+        <button onclick="localStorage.clear(); window.location.href='index.html'" class="mt-8 text-gray-500 text-sm underline">登出</button>
+    </div>
+
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
         const id = localStorage.getItem('uId');
+        if(!id) window.location.href="index.html";
+
         db.ref('users/'+id).on('value', s => {
             const u = s.val();
-            if(u) {
-                document.getElementById('ui').innerHTML = `<h1>${u.name} 您好</h1><p>目前狀態: ${u.status}</p><p style='font-size: 30px; color: #4ade80;'>可貸額度: $${u.loanLimit}</p>`;
-            }
+            document.getElementById('userName').innerText = u.name + " 您好！";
+            document.getElementById('ui').innerHTML = `
+                <div class="p-4 bg-black rounded-xl">狀態：${u.status == 'pending_user' ? '審核中' : '已核准'}</div>
+                <div class="text-4xl font-bold text-green-400 py-4">$${u.loanLimit || 0}</div>
+                <p class="text-gray-400">您的核准可貸額度</p>
+                ${u.status == 'loan_active' ? '<button class="w-full bg-indigo-600 py-3 rounded-xl mt-4">申請撥款</button>' : ''}
+            `;
         });
     </script>
 </body>
