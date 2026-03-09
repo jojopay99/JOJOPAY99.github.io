@@ -2,58 +2,73 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>JOJOPAY | 後台管理系統</title>
+    <title>JOJOPAY | 完整管理後台</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
-<body class="bg-gray-900 text-white p-8">
-    <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8 text-indigo-400">會員完整審核清單</h1>
-        <div id="userList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            </div>
+<body class="bg-gray-950 text-white min-h-screen p-6">
+    <div id="loginBox" class="max-w-xs mx-auto mt-20 p-8 bg-gray-900 rounded-3xl border border-gray-700 text-center">
+        <h2 class="text-xl font-bold mb-6">管理員權限驗證</h2>
+        <input type="password" id="admP" placeholder="輸入管理密碼" class="w-full p-3 mb-4 bg-gray-950 rounded-xl border border-gray-700 text-center">
+        <button onclick="checkAdmin()" class="w-full bg-indigo-600 py-3 rounded-xl font-bold">進入系統</button>
+    </div>
+
+    <div id="adminPanel" class="hidden max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-indigo-400">會員完整資料清單</h1>
+        <div id="userList" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
     </div>
 
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        
-        db.ref('users').on('value', s => {
-            const users = s.val() || {};
-            let html = '';
-            for(let id in users) {
-                const u = users[id];
-                html += `
-                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl">
-                    <div class="flex justify-between items-start mb-4">
-                        <h2 class="text-xl font-bold">${u.name}</h2>
-                        <span class="px-3 py-1 rounded-full text-xs ${u.status === 'official_user' ? 'bg-green-900 text-green-300' : 'bg-yellow-900 text-yellow-300'}">${u.status}</span>
-                    </div>
-                    <div class="space-y-2 text-sm text-gray-300">
-                        <p><strong>帳號(身分證):</strong> ${id}</p>
-                        <p><strong>手機(密碼):</strong> ${u.phone}</p>
-                        <p><strong>居住地址:</strong> ${u.address}</p>
-                        <p><strong>工作單位:</strong> ${u.job}</p>
-                        <p><strong>月薪:</strong> ${u.salary}</p>
-                        <p><strong>緊急聯絡人:</strong> ${u.contact}</p>
-                        <p><strong>撥款帳號:</strong> ${u.bank}</p>
-                    </div>
-                    <div class="mt-4 flex gap-2">
-                        ${u.imgs ? Object.keys(u.imgs).map(k => `<img src="${u.imgs[k]}" class="w-16 h-12 object-cover rounded border border-gray-600" title="${k}">`).join('') : '無上傳圖片'}
-                    </div>
-                    <div class="mt-6">
-                        <button onclick="approve('${id}')" class="w-full bg-indigo-600 py-2 rounded-xl font-bold hover:bg-indigo-500">核准並設定額度</button>
-                    </div>
-                </div>`;
-            }
-            document.getElementById('userList').innerHTML = html;
-        });
+
+        function checkAdmin() {
+            if(document.getElementById('admP').value === '0895') {
+                document.getElementById('loginBox').classList.add('hidden');
+                document.getElementById('adminPanel').classList.remove('hidden');
+                loadUsers();
+            } else { alert("權限不足"); }
+        }
+
+        function loadUsers() {
+            db.ref('users').on('value', snap => {
+                const users = snap.val() || {};
+                let html = '';
+                for(let id in users) {
+                    const u = users[id];
+                    html += `
+                    <div class="bg-gray-900 p-6 rounded-3xl border border-gray-800 shadow-2xl">
+                        <div class="flex justify-between mb-4">
+                            <h2 class="text-xl font-bold text-white">${u.name}</h2>
+                            <span class="text-xs bg-gray-700 px-3 py-1 rounded-full">${u.status}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-y-2 text-sm text-gray-400 mb-4">
+                            <p><strong>帳號(證號):</strong> ${id}</p>
+                            <p><strong>手機:</strong> ${u.phone}</p>
+                            <p><strong>地址:</strong> ${u.address}</p>
+                            <p><strong>單位:</strong> ${u.job}</p>
+                            <p><strong>薪資:</strong> ${u.salary}</p>
+                            <p><strong>緊急聯絡:</strong> ${u.contact}</p>
+                        </div>
+                        <div class="flex gap-2 overflow-x-auto pb-2">
+                            ${u.imgs ? Object.keys(u.imgs).map(k => `<img src="${u.imgs[k]}" class="w-20 h-14 object-cover rounded-lg border border-gray-700">`).join('') : '無資料'}
+                        </div>
+                        <div class="mt-6 flex gap-3">
+                            <button onclick="approve('${id}')" class="flex-1 bg-green-600 py-2 rounded-lg font-bold">核准</button>
+                            <button onclick="del('${id}')" class="px-4 bg-red-900 rounded-lg">刪除</button>
+                        </div>
+                    </div>`;
+                }
+                document.getElementById('userList').innerHTML = html;
+            });
+        }
 
         function approve(id) {
             const amt = prompt("請輸入核准額度", "30000");
-            if(amt) {
-                db.ref('users/'+id).update({ status: 'official_user', loanLimit: parseInt(amt) })
-                .then(() => alert("已更新會員狀態"));
-            }
+            if(amt) db.ref('users/'+id).update({status: 'official_user', loanLimit: parseInt(amt)});
+        }
+        function del(id) {
+            if(confirm("確定要刪除會員資料嗎？")) db.ref('users/'+id).remove();
         }
     </script>
 </body>
