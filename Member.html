@@ -10,23 +10,28 @@
 </head>
 <body class="p-8">
     <div class="max-w-md mx-auto bg-[#151520] p-8 rounded-3xl border border-gray-700 text-center">
-        <h1 id="userName" class="text-2xl font-bold mb-4">讀取中...</h1>
+        <h1 id="userName" class="text-2xl font-bold mb-4">讀取資料中...</h1>
         <div id="statusUI" class="space-y-4">
             <p>目前狀態: <span id="uStatus" class="text-yellow-400">讀取中</span></p>
             <div class="text-5xl font-bold text-green-400 my-6">$ <span id="uLimit">0</span></div>
-            <button onclick="applyLoan()" class="w-full bg-indigo-600 py-3 rounded-xl">申請貸款/更新合約</button>
+            <button onclick="alert('簽署功能開發中')" class="w-full bg-indigo-600 py-3 rounded-xl">申請貸款 / 簽署合約</button>
+            <button onclick="localStorage.clear(); window.location.href='index.html'" class="text-gray-500 text-sm mt-4 underline">登出</button>
         </div>
     </div>
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
         const uId = localStorage.getItem('uId');
+        
+        if(!uId) window.location.href = "Login.html";
+
         db.ref('users/'+uId).on('value', s => {
             const u = s.val();
-            document.getElementById('userName').innerText = u.name + " 您好";
-            document.getElementById('uStatus').innerText = u.status == 'loan_active' ? '貸款中' : (u.status == 'bad_debt' ? '呆帳' : '待審核');
-            document.getElementById('uLimit').innerText = u.loanAmount || 0;
+            if(u) {
+                document.getElementById('userName').innerText = u.name + " 您好";
+                document.getElementById('uStatus').innerText = u.status == 'loan_active' ? '貸款中' : (u.status == 'bad_debt' ? '呆帳' : '待審核');
+                document.getElementById('uLimit').innerText = u.loanAmount || 0;
+            }
         });
-        function applyLoan() { alert("系統將跳轉至簽名介面..."); }
     </script>
 </body>
 </html>
