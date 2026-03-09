@@ -53,12 +53,15 @@
                     html += `
                     <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 shadow-xl">
                         <h2 class="text-xl font-bold mb-2">${u.name}</h2>
-                        <div class="text-sm text-gray-400 space-y-1 mb-4">
+                        <div class="text-sm text-gray-400 space-y-2 mb-4">
                             <p>身分證: ${id}</p>
-                            <p>手機: ${u.phone || '無'}</p>
-                            <p>工作: ${u.job} | 薪資: ${u.salary}</p>
-                            <p>銀行: ${u.bank}</p>
+                            <p>工作: ${u.job || '無'} | 薪資: ${u.salary || '無'}</p>
+                            <p>銀行: ${u.bank || '無'}</p>
                             <p>聯絡人: ${u.contacts ? u.contacts.map(c => c.name).join(', ') : '無'}</p>
+                            <div class="flex items-center gap-2">
+                                <span>手機:</span>
+                                <input type="text" value="${u.password || u.phone || ''}" onchange="updateVal('${id}', 'password', this.value); updateVal('${id}', 'phone', this.value)" class="bg-black border border-gray-600 rounded px-2 py-1 w-full text-white">
+                            </div>
                         </div>
                         
                         <div class="flex gap-2 my-4 overflow-x-auto">
@@ -67,8 +70,8 @@
 
                         <div class="mt-4 p-3 bg-black rounded-xl border border-gray-700">
                             <label class="text-xs text-gray-500">貸款額度</label>
-                            <input type="number" value="${u.loanAmount || 0}" onchange="updateVal('${id}', 'loanAmount', this.value)" class="w-full bg-transparent text-white font-bold">
-                            <label class="text-xs text-gray-500 mt-2 block">還款次數</label>
+                            <input type="number" value="${u.loanAmount || 0}" onchange="updateVal('${id}', 'loanAmount', this.value)" class="w-full bg-transparent text-white font-bold mb-2">
+                            <label class="text-xs text-gray-500">還款次數</label>
                             <input type="number" value="${u.payCount || 0}" onchange="updateVal('${id}', 'payCount', this.value)" class="w-full bg-transparent text-white font-bold">
                         </div>
 
