@@ -1,30 +1,44 @@
-<body class="bg-[#0a0a0f] text-white flex items-center justify-center min-h-screen">
-    <div id="loginBox" class="max-w-sm w-full bg-[#151520] p-8 rounded-3xl border border-gray-700">
-        <h2 class="text-2xl font-bold mb-6 text-center text-indigo-400">會員登入</h2>
-        <input type="text" id="l_id" placeholder="身分證" class="w-full p-4 mb-4 bg-black rounded-xl border border-gray-700">
-        <input type="password" id="l_ph" placeholder="手機(密碼)" class="w-full p-4 mb-6 bg-black rounded-xl border border-gray-700">
-        <button onclick="login()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold">登入</button>
-        <div class="flex justify-between mt-6 text-sm text-gray-400">
-            <a href="Register.html">註冊</a><button onclick="fgt()">忘記密碼?</button>
-        </div>
-    </div>
-    <div id="fgtBox" class="hidden max-w-sm w-full bg-[#151520] p-8 rounded-3xl text-center">
-        <h2 class="text-xl font-bold mb-4 text-red-400">密碼查詢</h2>
-        <p class="mb-6">連自己的手機都忘記了嗎？請聯繫客服。</p>
-        <button onclick="location.reload()" class="bg-gray-700 px-6 py-2 rounded-xl">返回</button>
-    </div>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>JOJOPAY | 登入</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>body { background: #0a0a0f; color: white; }</style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6">
+    <div id="loginBox" class="max-w-sm w-full bg-[#151520] p-8 rounded-3xl border border-gray-700 shadow-2xl">
+        <h2 class="text-2xl font-bold mb-6 text-center text-indigo-400">會員中心</h2>
+        <input type="text" id="l_id" placeholder="身分證字號 (帳號)" class="w-full p-4 mb-4 bg-black rounded-xl border border-gray-700">
+        <input type="password" id="l_ph" placeholder="手機號碼 (密碼)" class="w-full p-4 mb-6 bg-black rounded-xl border border-gray-700 text-sm italic">
+        <button onclick="login()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold hover:bg-indigo-500 transition">登入</button>
+        
+        <div class="flex justify-between mt-6 text-sm text-gray-400">
+            <a href="Register.html" class="hover:text-white">會員註冊</a>
+            <button onclick="fgt()" class="hover:text-white">忘記密碼?</button>
+        </div>
+    </div>
+
+    <div id="fgtBox" class="hidden max-w-sm w-full bg-[#151520] p-8 rounded-3xl text-center border border-gray-700">
+        <h2 class="text-xl font-bold mb-4 text-red-400">密碼查詢</h2>
+        <p class="mb-6 text-gray-300">連自己的手機號碼都會忘記嗎？請聯繫客服人員處理。</p>
+        <button onclick="location.reload()" class="w-full bg-gray-700 py-3 rounded-xl hover:bg-gray-600">返回登入</button>
+    </div>
+
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
         function login() {
             const id = document.getElementById('l_id').value.trim().toUpperCase();
+            const ph = document.getElementById('l_ph').value.trim();
             db.ref('users/'+id).once('value', s => {
                 const u = s.val();
-                if(u && u.password === document.getElementById('l_ph').value.trim()) { localStorage.setItem('uId', id); window.location.href="Member.html"; }
-                else alert("錯誤");
+                if(u && u.password === ph) { localStorage.setItem('uId', id); window.location.href="Member.html"; }
+                else alert("帳號或密碼錯誤");
             });
         }
-        function fgt() { document.getElementById('loginBox').classList.add('hidden'); document.getElementById('fgtBox').classList.remove('hidden'); }
+        function fgt() { document.getElementById('loginBox').style.display='none'; document.getElementById('fgtBox').style.display='block'; }
     </script>
 </body>
+</html>
