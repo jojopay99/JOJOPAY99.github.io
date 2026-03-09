@@ -1,20 +1,23 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head><meta charset="UTF-8"><title>登入</title><script src="https://cdn.tailwindcss.com"></script><script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script></head>
-<body class="bg-gray-900 text-white p-6"><div class="max-w-sm mx-auto space-y-4">
-<input type="text" id="l_id" placeholder="身分證 (帳號)" class="w-full p-3 bg-gray-800 rounded">
-<input type="password" id="l_ph" placeholder="手機號碼 (密碼)" class="w-full p-3 bg-gray-800 rounded">
-<button onclick="login()" class="w-full bg-green-600 py-3 rounded">登入</button>
-</div>
-<script>
-const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-function login() {
-const id = document.getElementById('l_id').value.trim().toUpperCase();
-const ph = document.getElementById('l_ph').value.trim();
-db.ref('users/'+id).once('value', s => {
-const u = s.val();
-if(u && u.password === ph) { localStorage.setItem('uId', id); window.location.href="Member.html"; }
-else { alert("帳密錯誤"); }
-});
-}
-</script></body></html>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+    <div class="max-w-sm w-full bg-gray-800 p-8 rounded-3xl">
+        <h2 class="text-2xl font-bold text-center mb-8">會員登入</h2>
+        <input type="text" id="l_id" placeholder="身分證 (帳號)" class="w-full p-4 mb-4 bg-gray-900 rounded-xl">
+        <input type="password" id="l_ph" placeholder="手機號碼 (密碼)" class="w-full p-4 mb-6 bg-gray-900 rounded-xl">
+        <button onclick="login()" class="w-full bg-indigo-600 py-4 rounded-xl font-bold">登入</button>
+        <p class="text-center mt-4">沒有帳號？ <a href="Register.html" class="text-indigo-400 underline">立即註冊</a></p>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script>
+        const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
+        function login() {
+            const id = document.getElementById('l_id').value.trim().toUpperCase();
+            const ph = document.getElementById('l_ph').value.trim();
+            db.ref('users/'+id).once('value', s => {
+                const u = s.val();
+                if(u && u.password === ph) { localStorage.setItem('uId', id); window.location.href="Member.html"; }
+                else alert("帳號或密碼錯誤");
+            });
+        }
+    </script>
+</body>
