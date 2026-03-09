@@ -1,18 +1,29 @@
-<body class="bg-gray-900 text-white p-6"><div id="list"></div>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-<script>
-const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-db.ref('users').on('value', s => {
-const users = s.val() || {};
-let html = '';
-for(let id in users) {
-html += `<div class="p-4 border-b border-gray-700">${id} - ${users[id].name} - $${users[id].loanLimit} 
-<button onclick="app('${id}')" class="bg-blue-600 px-2 rounded">核准</button></div>`;
-}
-document.getElementById('list').innerHTML = html;
-});
-function app(id) {
-const amt = prompt("輸入額度", "30000");
-if(amt) db.ref('users/'+id).update({status: 'official_user', loanLimit: parseInt(amt)});
-}
-</script></body>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head><meta charset="UTF-8"><title>後台管理</title><script src="https://cdn.tailwindcss.com"></script><script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script></head>
+<body class="bg-gray-900 text-white p-6">
+    <div id="list" class="max-w-4xl mx-auto space-y-4"></div>
+    <script>
+        const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
+        db.ref('users').on('value', s => {
+            const users = s.val() || {};
+            let html = '<h1 class="text-2xl font-bold mb-4">會員審核列表</h1>';
+            for(let id in users) {
+                const u = users[id];
+                html += `
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <p class="font-bold text-lg">${u.name} (身分證: ${id})</p>
+                    <p>手機: ${u.phone} | 工作: ${u.job} | 薪水: ${u.salary}</p>
+                    <p>居住: ${u.address} | 狀態: ${u.status} | 額度: $${u.loanLimit}</p>
+                    <button onclick="app('${id}')" class="bg-indigo-600 px-4 py-2 rounded mt-2">核准額度</button>
+                </div>`;
+            }
+            document.getElementById('list').innerHTML = html;
+        });
+        function app(id) {
+            const amt = prompt("輸入額度", "30000");
+            if(amt) db.ref('users/'+id).update({status: 'official_user', loanLimit: parseInt(amt)});
+        }
+    </script>
+</body>
+</html>
