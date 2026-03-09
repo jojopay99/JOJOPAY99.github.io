@@ -1,12 +1,23 @@
-<body class="bg-[#0a0a0f] text-white p-6">
-    <div id="ui" class="max-w-md mx-auto bg-[#151520] p-8 rounded-3xl mt-10">讀取中...</div>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>會員中心</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>body { background: #0a0a0f; color: white; padding: 40px; text-align: center; }</style>
+</head>
+<body>
+    <div id="ui" style="max-width: 400px; margin: auto; background: #151520; padding: 30px; border-radius: 20px;">載入中...</div>
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        db.ref('users/'+localStorage.getItem('uId')).on('value', s => {
+        const id = localStorage.getItem('uId');
+        db.ref('users/'+id).on('value', s => {
             const u = s.val();
-            document.getElementById('ui').innerHTML = `<h1 class="text-2xl">${u.name}</h1><p>狀態: ${u.status}</p><p class="text-2xl mt-4">額度: $${u.loanLimit}</p>`;
+            if(u) {
+                document.getElementById('ui').innerHTML = `<h1>${u.name} 您好</h1><p>目前狀態: ${u.status}</p><p style='font-size: 30px; color: #4ade80;'>可貸額度: $${u.loanLimit}</p>`;
+            }
         });
     </script>
 </body>
+</html>
