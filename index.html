@@ -37,11 +37,11 @@
 
         // 初始化邏輯
         if(uId) {
-            // 已登入狀態
+            // 已登入狀態，檢查會員名稱並更新按鈕文字
             db.ref('users/'+uId).once('value', s => {
                 if(s.val()) {
                     authBtn.innerText = s.val().name + " 您好";
-                    mainBtn.innerText = "申請貸款 →";
+                    mainBtn.innerText = "進入會員中心 →";
                 }
             });
         }
@@ -58,9 +58,9 @@
         // 大按鈕功能
         function mainAction() {
             if(uId) {
-                window.location.href = "Member.html"; // 到會員中心申請貸款
+                window.location.href = "Member.html"; // 已登入則進入會員中心
             } else {
-                window.location.href = "Register.html"; // 去註冊
+                window.location.href = "Register.html"; // 未登入則前往註冊
             }
         }
     </script>
