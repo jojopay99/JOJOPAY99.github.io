@@ -1,39 +1,38 @@
-db.ref('users/' + userPhone).on('value', (snapshot) => {
-    const u = snapshot.val();
-    const stText = document.getElementById('statusText');
-    const action = document.getElementById('actionArea');
-    const detail = document.getElementById('loanDetail');
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>會員中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-900 text-white p-6">
+    <div class="max-w-md mx-auto bg-gray-800 p-8 rounded-3xl">
+        <h1 class="text-2xl font-bold mb-4">會員中心</h1>
+        <p id="statusText" class="mb-4"></p>
+        <div id="loanDetail" class="hidden">剩餘金額: <span id="remAmount"></span></div>
+        <div id="actionArea" class="hidden mt-4 bg-indigo-600 p-3 rounded text-center">立即申請貸款</div>
+    </div>
+    <script>
+        const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(conf);
+        const db = firebase.database();
+        const userPhone = localStorage.getItem('userPhone');
 
-    // 清除舊狀態
-    action.classList.add('hidden');
-    detail.classList.add('hidden');
+        if(!userPhone) window.location.href = "index.html";
 
-    if (u.status === 'pending_user') {
-        stText.innerText = "您的會員資格審核中...";
-        stText.className = "text-xl font-bold text-pink-500 italic animate-pulse";
-    } 
-    else if (u.status === 'official_user') {
-        stText.innerText = "正式會員：資格已通過";
-        stText.className = "text-xl font-bold text-green-400";
-        action.classList.remove('hidden'); // 顯示「立即申請貸款」按鈕
-    } 
-    else if (u.status === 'pending_loan') {
-        stText.innerText = "貸款申請審核中...";
-        stText.className = "text-xl font-bold text-yellow-500 animate-pulse";
-    } 
-    else if (u.status === 'active') {
-        stText.innerText = "線上會員：借款中";
-        stText.className = "text-xl font-bold text-indigo-400";
-        detail.classList.remove('hidden'); // 顯示「剩餘未繳」金額
-        document.getElementById('remAmount').innerText = '$' + u.remainingAmount;
-    } 
-    else if (u.status === 'finished') {
-        stText.innerText = "結清下車：信用優良";
-        stText.className = "text-xl font-bold text-green-500";
-        action.classList.remove('hidden'); // 允許再次申請
-    } 
-    else if (u.status === 'bad') {
-        stText.innerText = "呆帳：帳戶已封鎖";
-        stText.className = "text-xl font-bold text-red-600";
-    }
-});
+        db.ref('users/' + userPhone).on('value', (snap) => {
+            const u = snap.val();
+            if(!u) return;
+            const stText = document.getElementById('statusText');
+            const action = document.getElementById('actionArea');
+            const detail = document.getElementById('loanDetail');
+
+            if (u.status === 'pending_user') stText.innerText = "審核中...";
+            else if (u.status === 'official_user') { stText.innerText = "正式會員：可申請額度 " + u.loanLimit; action.classList.remove('hidden'); }
+            // 這裡對接了後台設定的 status 與 loanLimit
+        });
+    </script>
+</body>
+</html>
