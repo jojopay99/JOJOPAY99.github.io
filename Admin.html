@@ -55,13 +55,14 @@
                         <h2 class="text-xl font-bold mb-2">${u.name}</h2>
                         <div class="text-sm text-gray-400 space-y-2 mb-4">
                             <p>身分證: ${id}</p>
-                            <p>工作: ${u.job || '無'} | 薪資: ${u.salary || '無'}</p>
-                            <p>銀行: ${u.bank || '無'}</p>
-                            <p>聯絡人: ${u.contacts ? u.contacts.map(c => c.name).join(', ') : '無'}</p>
                             <div class="flex items-center gap-2">
                                 <span>手機:</span>
-                                <input type="text" value="${u.password || u.phone || ''}" onchange="updateVal('${id}', 'password', this.value); updateVal('${id}', 'phone', this.value)" class="bg-black border border-gray-600 rounded px-2 py-1 w-full text-white">
+                                <input type="text" id="ph_${id}" value="${u.password || ''}" disabled class="bg-black p-1 rounded border border-gray-600 text-white w-full">
+                                <button onclick="toggleEdit('${id}')" class="text-blue-400 text-xs">編輯</button>
                             </div>
+                            <p>工作: ${u.job} | 薪資: ${u.salary}</p>
+                            <p>銀行: ${u.bank}</p>
+                            <p>聯絡人: ${u.contacts ? u.contacts.map(c => c.name).join(', ') : '無'}</p>
                         </div>
                         
                         <div class="flex gap-2 my-4 overflow-x-auto">
@@ -92,6 +93,17 @@
             });
         }
 
+        function toggleEdit(id) {
+            const input = document.getElementById('ph_' + id);
+            if(input.disabled) {
+                input.disabled = false;
+                input.focus();
+            } else {
+                input.disabled = true;
+                updateVal(id, 'password', input.value);
+            }
+        }
+
         function updateVal(id, field, val) { 
             let updateObj = {}; 
             updateObj[field] = val; 
@@ -99,8 +111,8 @@
         }
 
         function deleteUser(id) {
-            if(confirm("確定要刪除會員 " + id + " 嗎？此動作無法復原！")) {
-                db.ref('users/'+id).remove().then(() => alert("刪除成功")).catch(e => alert("錯誤: " + e.message));
+            if(confirm("確定要刪除會員 " + id + " 嗎？")) {
+                db.ref('users/'+id).remove();
             }
         }
     </script>
