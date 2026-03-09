@@ -38,12 +38,28 @@
         <button onclick="addContact()" class="text-sm text-indigo-400 mb-6">+ 新增一位聯絡人</button>
 
         <h2 class="mb-4 font-bold text-gray-300">證件上傳</h2>
-        <div class="grid grid-cols-2 gap-4">
-            <button onclick="document.getElementById('f1').click()" class="bg-gray-800 p-3 rounded-xl text-sm" id="btn-f1">身分證正面</button>
-            <button onclick="document.getElementById('f2').click()" class="bg-gray-800 p-3 rounded-xl text-sm" id="btn-f2">身分證反面</button>
-            <button onclick="document.getElementById('f3').click()" class="bg-gray-800 p-3 rounded-xl text-sm" id="btn-f3">健保卡</button>
-            <button onclick="document.getElementById('f4').click()" class="bg-gray-800 p-3 rounded-xl text-sm" id="btn-f4">加分項目</button>
-            <button onclick="document.getElementById('f5').click()" class="bg-gray-800 p-3 rounded-xl text-sm" id="btn-f5">自拍認證</button>
+        <div class="space-y-4">
+            <div onclick="document.getElementById('f1').click()" class="border-2 border-dashed border-gray-700 rounded-2xl p-6 text-center cursor-pointer hover:border-indigo-500 transition">
+                <p id="btn-f1" class="text-gray-400">點擊上傳身分證正面</p>
+            </div>
+            <div onclick="document.getElementById('f2').click()" class="border-2 border-dashed border-gray-700 rounded-2xl p-6 text-center cursor-pointer hover:border-indigo-500 transition">
+                <p id="btn-f2" class="text-gray-400">點擊上傳身分證反面</p>
+            </div>
+            <div onclick="document.getElementById('f3').click()" class="border-2 border-dashed border-gray-700 rounded-2xl p-6 text-center cursor-pointer hover:border-indigo-500 transition">
+                <p id="btn-f3" class="text-gray-400">點擊上傳健保卡正面</p>
+            </div>
+            
+            <div class="bg-[#1f1f2e] p-4 rounded-2xl border border-indigo-900">
+                <p class="text-indigo-300 text-sm mb-2 font-bold">⚠️ 自拍認證教學：</p>
+                <p class="text-gray-300 text-xs mb-3">請左手持身分證（勿擋住字面及照片）與您一起自拍，確保影像清晰。</p>
+                <div onclick="document.getElementById('f5').click()" class="border-2 border-dashed border-gray-600 rounded-xl p-4 text-center cursor-pointer">
+                    <p id="btn-f5" class="text-gray-400">點擊上傳自拍照片</p>
+                </div>
+            </div>
+
+            <div onclick="document.getElementById('f4').click()" class="border-2 border-dashed border-gray-700 rounded-2xl p-6 text-center cursor-pointer">
+                <p id="btn-f4" class="text-gray-400">點擊上傳其他加分證件 (選填)</p>
+            </div>
         </div>
         
         <input type="file" id="f1" class="hidden" onchange="up(this,'f1')">
