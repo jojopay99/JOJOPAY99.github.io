@@ -16,12 +16,14 @@
 
     <div id="adminPanel" style="display:none;" class="max-w-7xl mx-auto">
         <h1 class="text-3xl font-bold mb-6">會員審核中心</h1>
+        
         <div class="grid grid-cols-4 gap-4 mb-8 text-center">
             <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700"><p class="text-gray-400">待審核</p><h2 id="s_pending" class="text-2xl font-bold text-yellow-400">0</h2></div>
             <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700"><p class="text-gray-400">貸款中</p><h2 id="s_loan" class="text-2xl font-bold text-blue-400">0</h2></div>
             <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700"><p class="text-gray-400">呆帳</p><h2 id="s_bad" class="text-2xl font-bold text-red-400">0</h2></div>
             <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700"><p class="text-gray-400">總會員</p><h2 id="s_total" class="text-2xl font-bold text-white">0</h2></div>
         </div>
+
         <div id="userList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
 
@@ -62,8 +64,12 @@
                             <p>聯絡人: ${u.contacts ? u.contacts.map(c => c.name).join(', ') : '無'}</p>
                         </div>
                         
-                        <div class="flex gap-2 my-4 overflow-x-auto">
-                            ${u.imgs ? Object.keys(u.imgs).map(k => `<img src="${u.imgs[k]}" class="w-16 h-16 rounded-lg cursor-pointer border border-gray-600" onclick="window.open('${u.imgs[k]}')">`).join('') : '無證件'}
+                        <div class="flex gap-2 my-4 overflow-x-auto p-2 bg-black rounded-xl">
+                            ${u.imgs ? Object.entries(u.imgs).map(([key, url]) => `
+                                <a href="${url}" target="_blank" rel="noopener noreferrer">
+                                    <img src="${url}" class="w-16 h-16 object-cover rounded-lg cursor-pointer border border-gray-600 hover:border-indigo-500">
+                                </a>
+                            `).join('') : '<p class="text-xs text-gray-500 p-2">無證件</p>'}
                         </div>
 
                         <div class="mt-4 p-3 bg-black rounded-xl border border-gray-700">
@@ -92,7 +98,7 @@
         function enableEdit(id) {
             const span = document.getElementById('phone_'+id);
             const newVal = prompt("請輸入新的手機號碼/密碼:", span.innerText);
-            if(newVal !== null) {
+            if(newVal !== null && newVal !== "") {
                 updateVal(id, 'password', newVal);
             }
         }
@@ -104,8 +110,8 @@
         }
 
         function deleteUser(id) {
-            if(confirm("確定要刪除會員 " + id + " 嗎？")) {
-                db.ref('users/'+id).remove();
+            if(confirm("確定要刪除會員 " + id + " 嗎？此動作無法復原！")) {
+                db.ref('users/'+id).remove().then(() => alert("刪除成功")).catch(e => alert("錯誤: " + e.message));
             }
         }
     </script>
