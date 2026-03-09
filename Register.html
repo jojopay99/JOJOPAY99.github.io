@@ -8,11 +8,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
-        body { background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%); color: white; }
+        body { background: radial-gradient(circle at top, #1c1c3d 0%, #0a0a14 100%); color: white; min-height: 100vh; }
         .form-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px; }
         .input-box { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; padding: 12px; border-radius: 12px; margin-top: 4px; color: white; outline: none; font-size: 14px; }
         .upload-item { background: rgba(255, 255, 255, 0.03); border: 2px dashed rgba(255, 255, 255, 0.15); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 16 / 10; cursor: pointer; position: relative; overflow: hidden; }
-        .upload-item img { position: absolute; width: 100%; height: 100%; object-fit: cover; display: none; }
+        .upload-item img { position: absolute; width: 100%; height: 100%; object-fit: cover; }
         .kyc-box { background: rgba(236, 72, 153, 0.05); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 20px; padding: 20px; }
         .contact-row { background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 10px; }
     </style>
@@ -30,88 +30,5 @@
                 <input type="text" id="name" class="input-box" placeholder="真實姓名">
                 <input type="text" id="idCard" class="input-box" placeholder="身分證字號">
                 <div class="flex gap-2">
-                    <input type="tel" id="phone" class="input-box" placeholder="手機號碼 (作為登入帳號)">
+                    <input type="tel" id="phone" class="input-box" placeholder="手機號碼">
                     <button onclick="alert('驗證碼已發送')" class="bg-indigo-600 px-4 rounded-xl text-xs mt-1">發送</button>
-                </div>
-                <input type="text" id="vCode" class="input-box" placeholder="驗證碼 (預設 1234)">
-                <input type="text" id="hAddr" class="input-box" placeholder="戶籍地址">
-                <input type="text" id="cAddr" class="input-box" placeholder="現居地址">
-                <input type="text" id="bank" class="input-box" placeholder="撥款帳戶 (銀行+帳號)">
-            </section>
-
-            <section class="space-y-4">
-                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">工作資訊</h2>
-                <select id="jobType" class="input-box bg-gray-800">
-                    <option value="">選擇職業類型</option>
-                    <option value="學生">學生</option>
-                    <option value="上班族">上班族</option>
-                    <option value="軍公教">軍公教</option>
-                    <option value="自由業">自由業</option>
-                </select>
-                <input type="text" id="compName" class="input-box" placeholder="公司/學校名稱">
-                <input type="text" id="compAddr" class="input-box" placeholder="公司/學校地址">
-                <input type="tel" id="compTel" class="input-box" placeholder="公司/學校電話">
-            </section>
-
-            <section class="space-y-4">
-                <h2 class="font-bold border-l-4 border-indigo-500 pl-2 text-indigo-300 text-lg">緊急聯絡人</h2>
-                <div id="contactList">
-                    <div class="contact-row space-y-2">
-                        <div class="flex gap-2">
-                            <input type="text" id="cRel" placeholder="關係" class="input-box text-sm">
-                            <input type="text" id="cName" placeholder="姓名" class="input-box text-sm">
-                        </div>
-                        <input type="tel" id="cTel" placeholder="聯絡電話" class="input-box text-sm">
-                    </div>
-                </div>
-                <button onclick="addContact()" class="w-full py-2 border border-dashed border-gray-600 rounded-xl text-xs text-gray-400">+ 新增聯絡人</button>
-            </section>
-
-            <button onclick="submitAll()" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all shadow-xl">送出申請資料</button>
-        </div>
-    </div>
-
-    <script>
-        const conf = { databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(conf);
-        const db = firebase.database();
-
-        function addContact() {
-            const div = document.createElement('div');
-            div.className = "contact-row space-y-2";
-            div.innerHTML = `<div class="flex gap-2"><input type="text" placeholder="關係" class="input-box text-sm"><input type="text" placeholder="姓名" class="input-box text-sm"></div><input type="tel" placeholder="聯絡電話" class="input-box text-sm">`;
-            document.getElementById('contactList').appendChild(div);
-        }
-
-        function submitAll() {
-            const phone = document.getElementById('phone').value.trim();
-            const idCard = document.getElementById('idCard').value.trim().toUpperCase();
-            const vCode = document.getElementById('vCode').value.trim();
-
-            if(!phone || !idCard || vCode !== '1234') return alert("請檢查手機、身分證及驗證碼是否正確");
-
-            const data = {
-                name: document.getElementById('name').value,
-                idCard: idCard,
-                phone: phone,
-                hAddr: document.getElementById('hAddr').value,
-                cAddr: document.getElementById('cAddr').value,
-                bank: document.getElementById('bank').value,
-                job: document.getElementById('jobType').value,
-                compName: document.getElementById('compName').value,
-                compTel: document.getElementById('compTel').value,
-                status: 'pending_user',
-                loanLimit: 0
-            };
-
-            // 使用手機號碼作為 Key 存入資料庫
-            db.ref('users/' + phone).set(data).then(() => {
-                alert("申請成功！請等候審核。");
-                window.location.href = "index.html";
-            }).catch(error => {
-                alert("錯誤：" + error.message);
-            });
-        }
-    </script>
-</body>
-</html>
