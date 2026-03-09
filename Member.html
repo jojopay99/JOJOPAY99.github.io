@@ -1,5 +1,5 @@
 <body class="bg-gray-900 text-white p-6">
-    <div id="ui" class="max-w-2xl mx-auto bg-gray-800 p-8 rounded-3xl shadow-xl">讀取中...</div>
+    <div id="ui" class="max-w-2xl mx-auto bg-gray-800 p-8 rounded-3xl">資料載入中...</div>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script>
@@ -8,11 +8,9 @@
         db.ref('users/'+id).on('value', s => {
             const u = s.val();
             document.getElementById('ui').innerHTML = `
-                <h1 class="text-3xl font-bold text-indigo-400">${u.name} 您好</h1>
-                <div class="mt-6 space-y-4">
-                    <p>狀態: <span class="bg-indigo-900 px-3 py-1 rounded">${u.status}</span></p>
-                    <p class="text-2xl">核准額度: <span class="font-bold text-green-400">$${u.loanLimit}</span></p>
-                </div>`;
+                <h1 class="text-2xl font-bold">${u.name}</h1>
+                <p class="mt-4 text-gray-400">目前狀態: <span class="text-white">${u.status}</span></p>
+                <p class="text-2xl font-bold text-green-400 mt-2">核准額度: $${u.loanLimit}</p>`;
         });
     </script>
 </body>
