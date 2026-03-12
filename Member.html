@@ -53,41 +53,56 @@
         if(!uId) window.location.href = "Login.html";
 
         db.ref('users/'+uId).on('value', s => {
-            const u = s.val();
-            if(!u) return;
+    const u = s.val();
+    if(!u) return;
 
-            document.getElementById('userName').innerText = u.name + " 您好";
-            
-            const st = u.status;
-            const statusMap = {
-                'pending_user': '待審核 (請稍後)',
-                'verified': '正式會員 (可申請貸款)',
-                'applying_loan': '貸款審核中',
-                'loaning': '貸款中 (還款中)',
-                'paid': '已結清',
-                'bad_debt': '帳務異常'
-            };
-            document.getElementById('uStatus').innerText = statusMap[st] || st;
+    document.getElementById('userName').innerText = u.name + " 您好";
+    
+    const st = u.status;
+    const statusMap = {
+        'pending_user': '待審核 (請稍後)',
+        'verified': '正式會員 (可申請貸款)',
+        'applying_loan': '貸款審核中',
+        'loaning': '貸款中 (還款中)',
+        'paid': '已結清',
+        'bad_debt': '帳務異常'
+    };
+    document.getElementById('uStatus').innerText = statusMap[st] || st;
 
-            if(st === 'loaning') {
-                document.getElementById('limitTitle').innerText = '剩餘應還總額';
-                document.getElementById('uLimit').innerText = Math.floor(u.balance || 0);
-                document.getElementById('dailyTip').classList.remove('hidden');
-                document.getElementById('uDaily').innerText = Math.floor(u.dailyPayment || 0);
-                document.getElementById('payPanel').classList.remove('hidden');
-                document.getElementById('btnLoan').style.display = 'none';
-            } else {
-                document.getElementById('limitTitle').innerText = '可用額度';
-                document.getElementById('uLimit').innerText = u.loanAmount || 0;
-                document.getElementById('payPanel').classList.add('hidden');
-                document.getElementById('btnLoan').style.display = (st === 'verified') ? 'block' : 'none';
-            }
-        });
-
-        function applyLoan() {
-            db.ref('users/'+uId).update({ status: 'applying_loan' })
-            .then(() => alert("貸款申請已送出，請靜候後台撥款"));
+    // 統一進行顯示邏輯判斷
+    if(st === 'loaning') {
+        // 還款中狀態
+        document.getElementById('limitTitle').innerText = '剩餘應還總額';
+        document.getElementById('uLimit').innerText = Math.floor(u.balance || 0);
+        document.getElementById('dailyTip').classList.remove('hidden');
+        document.getElementById('uDaily').innerText = Math.floor(u.dailyPayment || 0);
+        document.getElementById('payPanel').classList.remove('hidden');
+        document.getElementById('btnLoan').style.display = 'none';
+    } else {
+        // 非還款狀態 (可申請時)
+        document.getElementById('limitTitle').innerText = '可用額度';
+        document.getElementById('uLimit').innerText = u.loanAmount || 0;
+        document.getElementById('dailyTip').classList.add('hidden');
+        document.getElementById('payPanel').classList.add('hidden');
+        
+        // 核心修正：檢查是否為正式會員或已結清，如果是則顯示按鈕
+        if (st === 'verified' || st === 'paid') {
+            document.getElementById('btnLoan').style.display = 'block';
+            document.getElementById('btnLoan').innerText = (st === 'paid') ? '再次申請貸款' : '申請貸款 / 簽署合約';
+        } else {
+            document.getElementById('btnLoan').style.display = 'none';
         }
+    }
+});
+
+       function applyLoan() {
+    // 申請後將狀態改為 applying_loan，後台便能收到請求
+    db.ref('users/'+uId).update({ 
+        status: 'applying_loan',
+        loanDate: new Date().toLocaleDateString() // 記錄申請時間
+    })
+    .then(() => alert("貸款申請已送出，請靜候後台撥款"));
+}
 
         function handlePayImg(input) {
             const r = new FileReader();
