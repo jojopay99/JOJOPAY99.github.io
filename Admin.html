@@ -87,6 +87,7 @@
         function renderUserCard(id, u) {
             let actionHtml = '';
             
+            // 根據不同狀態提供不同操作案紐
             if(u.status === 'pending_user') {
                 actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
             } else if(u.status === 'verified') {
@@ -109,6 +110,7 @@
                     </div>`;
             }
 
+            // 顯示還款審核
             let payLogHtml = '';
             if(u.payLogs) {
                 Object.entries(u.payLogs).forEach(([logId, log]) => {
@@ -123,29 +125,37 @@
                 });
             }
 
-            let historyInfo = u.history ? Object.keys(u.history).length : 0;
+            // --- 新增的功能區塊開始 ---
+            let historyHtml = "";
+            if (u.history) {
+                historyHtml = `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">歷史借款編號: <span class="text-white">${Object.keys(u.history).join(", ")}</span></div>`;
+            }
+            // --- 新增的功能區塊結束 ---
 
             return `
             <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700">
                 <div class="flex justify-between items-start mb-4">
-                    <h2 class="text-xl font-bold">${u.name} ${historyInfo > 0 ? '('+historyInfo+')' : ''}</h2>
+                    <h2 class="text-xl font-bold">${u.name}</h2>
                     <span class="text-xs px-2 py-1 bg-gray-700 rounded">${u.status}</span>
                 </div>
                 <div class="text-xs text-gray-400 space-y-1 mb-4">
                     <p>身分證: ${id}</p>
-                    <p>手機: ${u.password} <button onclick="editPhone('${id}')" class="text-blue-400 underline ml-2">[編輯]</button></p>
+                    <p>手機: ${u.password} <button onclick="editPhone('${id}')" class="text-blue-400 font-bold ml-2 underline">[編輯]</button></p>
                     ${u.balance !== undefined ? `<p class="text-green-400 font-bold">剩餘應還: ${u.balance}</p><p class="text-indigo-300">每日應繳: ${u.dailyPayment}</p>` : ''}
                 </div>
                 ${actionHtml}
                 ${payLogHtml}
-                ${u.history ? `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px]"><p class="text-gray-500">歷史編號:</p><div class="flex gap-1 mt-1">${Object.keys(u.history).map(k => `<button onclick="alert('借款紀錄: '+JSON.stringify(u.history['${k}']))" class="bg-gray-700 px-2 rounded">${k}</button>`).join('')}</div></div>` : ''}
+                ${historyHtml}
                 <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
             </div>`;
         }
 
+        // 新增的手機編輯函數
         function editPhone(id) {
-            const newPhone = prompt("請輸入新手機號碼:");
-            if(newPhone) updateVal(id, 'password', newPhone);
+            let newPhone = prompt("請輸入新手機號碼：");
+            if (newPhone != null && newPhone != "") {
+                updateVal(id, 'password', newPhone);
+            }
         }
 
         function approveLoan(id) {
@@ -172,18 +182,25 @@
                 const u = s.val();
                 const newBalance = (u.balance || 0) - amount;
                 
-                if(newBalance <= 0) {
-                    const historyRef = db.ref('users/'+uId+'/history');
+                // 如果餘額小於等於0，執行結清歸檔
+                if (newBalance <= 0) {
+                    let historyRef = db.ref('users/' + uId + '/history');
                     historyRef.once('value', hSnap => {
-                        const newIdx = (hSnap.numChildren() || 0) + 1;
-                        historyRef.child(newIdx).set({ 
-                            loanAmount: u.loanAmount, 
-                            finishDate: new Date().toLocaleDateString() 
+                        let count = hSnap.numChildren() + 1;
+                        historyRef.child(count).set({
+                            amount: u.loanAmount,
+                            date: new Date().toLocaleDateString()
                         });
-                        db.ref('users/'+uId).update({ balance: 0, status: 'paid' });
+                    });
+                    
+                    db.ref('users/' + uId).update({
+                        balance: 0,
+                        status: 'paid'
                     });
                 } else {
-                    db.ref('users/'+uId).update({ balance: newBalance });
+                    db.ref('users/' + uId).update({
+                        balance: newBalance
+                    });
                 }
                 
                 db.ref('users/'+uId+'/payLogs/'+logId).update({ confirmed: true });
