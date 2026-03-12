@@ -10,56 +10,123 @@
 </head>
 <body class="p-8">
     <div class="max-w-md mx-auto bg-[#151520] p-8 rounded-3xl border border-gray-700 text-center">
-        <h1 id="userName" class="text-2xl font-bold mb-4">讀取資料中...</h1>
+        <h1 id="userName" class="text-2xl font-bold mb-4 text-indigo-400">讀取資料中...</h1>
         
-        <div id="statusUI" class="space-y-4">
-            <p>目前狀態: <span id="uStatus" class="text-yellow-400">讀取中</span></p>
-            <div class="text-5xl font-bold text-green-400 my-6">$ <span id="uLimit">0</span></div>
-            
-            <button onclick="alert('簽署功能開發中')" class="w-full bg-indigo-600 py-3 rounded-xl font-bold">申請貸款 / 簽署合約</button>
-            
-            <button onclick="document.getElementById('addImg').click()" class="w-full bg-gray-800 py-3 rounded-xl font-bold border border-gray-600 text-sm hover:bg-gray-700">對額度不滿意？補充加分照片</button>
-            <input type="file" id="addImg" class="hidden" onchange="uploadExtra(this)">
-            
-            <div class="grid grid-cols-2 gap-4 mt-6">
-                <a href="https://line.me/R/ti/p/your_line_id" target="_blank" class="bg-gray-800 py-3 rounded-xl text-sm">聯繫客服</a>
-                <a href="index.html" class="bg-gray-800 py-3 rounded-xl text-sm">返回首頁</a>
+        <div id="mainUI" class="space-y-6">
+            <div class="bg-black/50 p-4 rounded-2xl border border-gray-800">
+                <p class="text-xs text-gray-500 uppercase tracking-widest">目前帳戶狀態</p>
+                <p id="uStatus" class="text-yellow-400 font-bold mt-1">讀取中...</p>
+            </div>
+
+            <div class="py-6">
+                <p id="limitTitle" class="text-gray-400 text-sm mb-2">可用額度</p>
+                <div class="text-5xl font-bold text-green-400">$ <span id="uLimit">0</span></div>
+                <p id="dailyTip" class="text-xs text-indigo-300 mt-4 hidden">請記得繳款，今日應繳：<span id="uDaily">0</span> 元</p>
+            </div>
+
+            <div id="payPanel" class="hidden bg-[#1a1a2e] p-5 rounded-2xl border border-indigo-900/50 text-left">
+                <h3 class="font-bold text-sm mb-4 text-indigo-300">快速還款匯報</h3>
+                <input type="number" id="payAmt" placeholder="請輸入已繳金額" class="w-full bg-black p-3 rounded-xl border border-gray-700 mb-3 text-white">
+                <button onclick="document.getElementById('payFile').click()" id="payBtnText" class="w-full bg-gray-800 py-3 rounded-xl text-sm mb-3 border border-dashed border-gray-500">上傳繳款明細 (照片)</button>
+                <input type="file" id="payFile" class="hidden" onchange="handlePayImg(this)">
+                <button onclick="submitPayment()" class="w-full bg-indigo-600 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20">送出審核</button>
             </div>
             
-            <button onclick="logout()" class="text-gray-500 text-sm mt-8 underline">登出帳號</button>
+            <div id="actionBtns" class="space-y-3">
+                <button onclick="applyLoan()" id="btnLoan" class="w-full bg-indigo-600 py-3 rounded-xl font-bold">申請貸款 / 簽署合約</button>
+                <button onclick="document.getElementById('addImg').click()" class="w-full bg-gray-800 py-3 rounded-xl text-sm">補充加分照片</button>
+                <input type="file" id="addImg" class="hidden" onchange="uploadExtra(this)">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <a href="https://line.me/R/ti/p/your_line_id" class="bg-gray-900 py-3 rounded-xl text-xs border border-gray-800">聯繫客服</a>
+                <button onclick="logout()" class="bg-gray-900 py-3 rounded-xl text-xs border border-gray-800 text-red-400">登出</button>
+            </div>
         </div>
     </div>
 
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
         const uId = localStorage.getItem('uId');
+        let payImgBase64 = '';
         
         if(!uId) window.location.href = "Login.html";
 
         db.ref('users/'+uId).on('value', s => {
             const u = s.val();
-            if(u) {
-                document.getElementById('userName').innerText = u.name + " 您好";
-                document.getElementById('uStatus').innerText = u.status == 'loan_active' ? '貸款中' : (u.status == 'bad_debt' ? '呆帳' : '待審核');
+            if(!u) return;
+
+            document.getElementById('userName').innerText = u.name + " 您好";
+            
+            // 狀態邏輯切換
+            const st = u.status;
+            const statusMap = {
+                'pending_user': '待審核 (請稍後)',
+                'verified': '正式會員 (可申請貸款)',
+                'applying_loan': '貸款審核中',
+                'loaning': '貸款中 (還款中)',
+                'paid': '已結清',
+                'bad_debt': '帳務異常'
+            };
+            document.getElementById('uStatus').innerText = statusMap[st] || st;
+
+            // 餘額與額度顯示
+            if(st === 'loaning') {
+                document.getElementById('limitTitle').innerText = '剩餘應還總額';
+                document.getElementById('uLimit').innerText = Math.floor(u.balance);
+                document.getElementById('dailyTip').classList.remove('hidden');
+                document.getElementById('uDaily').innerText = Math.floor(u.dailyPayment);
+                document.getElementById('payPanel').classList.remove('hidden');
+                document.getElementById('btnLoan').style.display = 'none';
+            } else {
+                document.getElementById('limitTitle').innerText = '可用額度';
                 document.getElementById('uLimit').innerText = u.loanAmount || 0;
+                document.getElementById('payPanel').classList.add('hidden');
+                document.getElementById('btnLoan').style.display = 'block';
             }
         });
 
-        // 新增：處理加分照片上傳
-        function uploadExtra(input) {
+        function applyLoan() {
+            db.ref('users/'+uId).update({ status: 'applying_loan' })
+            .then(() => alert("貸款申請已送出，請靜候後台撥款"));
+        }
+
+        function handlePayImg(input) {
             const r = new FileReader();
-            r.onload = e => {
-                db.ref('users/'+uId+'/imgs/extra').set(e.target.result).then(() => {
-                    alert("加分照片已上傳，請待專員審核");
-                });
+            r.onload = e => { 
+                payImgBase64 = e.target.result;
+                document.getElementById('payBtnText').innerText = "✅ 照片已就緒";
+                document.getElementById('payBtnText').classList.add('text-green-400');
             };
             r.readAsDataURL(input.files[0]);
         }
 
-        function logout() {
-            localStorage.clear();
-            window.location.href = "index.html";
+        function submitPayment() {
+            const amt = document.getElementById('payAmt').value;
+            if(!amt || !payImgBase64) return alert("請填寫金額並上傳照片");
+            
+            db.ref('users/'+uId+'/payLogs').push({
+                amount: parseInt(amt),
+                img: payImgBase64,
+                time: new Date().toLocaleString(),
+                confirmed: false
+            }).then(() => {
+                alert("還款匯報已送出！管理員確認後會扣除您的餘額。");
+                document.getElementById('payAmt').value = '';
+                payImgBase64 = '';
+                document.getElementById('payBtnText').innerText = "上傳繳款明細 (照片)";
+            });
         }
+
+        function uploadExtra(input) {
+            const r = new FileReader();
+            r.onload = e => {
+                db.ref('users/'+uId+'/imgs/extra').set(e.target.result).then(() => alert("已送出加分補充"));
+            };
+            r.readAsDataURL(input.files[0]);
+        }
+
+        function logout() { localStorage.clear(); window.location.href = "index.html"; }
     </script>
 </body>
 </html>
