@@ -24,6 +24,11 @@
                 <p id="dailyTip" class="text-xs text-indigo-300 mt-4 hidden">請記得繳款，今日應繳：<span id="uDaily">0</span> 元</p>
             </div>
 
+            <div id="historyPanel" class="hidden bg-gray-900/50 p-4 rounded-xl border border-gray-800 text-left">
+                <h3 class="text-xs text-gray-500 mb-2">借款歷史紀錄</h3>
+                <div id="historyList" class="flex gap-2 flex-wrap text-sm"></div>
+            </div>
+
             <div id="payPanel" class="hidden bg-[#1a1a2e] p-5 rounded-2xl border border-indigo-900/50 text-left">
                 <h3 class="font-bold text-sm mb-4 text-indigo-300">快速還款匯報</h3>
                 <input type="number" id="payAmt" placeholder="請輸入已繳金額" class="w-full bg-black p-3 rounded-xl border border-gray-700 mb-3 text-white">
@@ -58,7 +63,6 @@
 
             document.getElementById('userName').innerText = u.name + " 您好";
             
-            // 狀態邏輯切換
             const st = u.status;
             const statusMap = {
                 'pending_user': '待審核 (請稍後)',
@@ -70,19 +74,25 @@
             };
             document.getElementById('uStatus').innerText = statusMap[st] || st;
 
-            // 餘額與額度顯示
+            // 顯示借款歷史
+            if(u.history) {
+                document.getElementById('historyPanel').classList.remove('hidden');
+                let hList = document.getElementById('historyList');
+                hList.innerHTML = Object.keys(u.history).map(k => `<span class="bg-gray-800 px-3 py-1 rounded-full text-indigo-300 border border-gray-700">#${k}</span>`).join('');
+            }
+
             if(st === 'loaning') {
                 document.getElementById('limitTitle').innerText = '剩餘應還總額';
-                document.getElementById('uLimit').innerText = Math.floor(u.balance);
+                document.getElementById('uLimit').innerText = Math.floor(u.balance || 0);
                 document.getElementById('dailyTip').classList.remove('hidden');
-                document.getElementById('uDaily').innerText = Math.floor(u.dailyPayment);
+                document.getElementById('uDaily').innerText = Math.floor(u.dailyPayment || 0);
                 document.getElementById('payPanel').classList.remove('hidden');
                 document.getElementById('btnLoan').style.display = 'none';
             } else {
                 document.getElementById('limitTitle').innerText = '可用額度';
                 document.getElementById('uLimit').innerText = u.loanAmount || 0;
                 document.getElementById('payPanel').classList.add('hidden');
-                document.getElementById('btnLoan').style.display = 'block';
+                document.getElementById('btnLoan').style.display = (st === 'verified') ? 'block' : 'none';
             }
         });
 
