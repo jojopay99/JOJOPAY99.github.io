@@ -86,8 +86,6 @@
 
         function renderUserCard(id, u) {
             let actionHtml = '';
-            
-            // 根據不同狀態提供不同操作案紐
             if(u.status === 'pending_user') {
                 actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
             } else if(u.status === 'verified') {
@@ -110,7 +108,6 @@
                     </div>`;
             }
 
-            // 顯示還款審核
             let payLogHtml = '';
             if(u.payLogs) {
                 Object.entries(u.payLogs).forEach(([logId, log]) => {
@@ -125,17 +122,17 @@
                 });
             }
 
-            // --- 新增的功能區塊開始 ---
+            // 歷史編號與顯示連結
             let historyHtml = "";
             if (u.history) {
-                historyHtml = `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">歷史借款編號: <span class="text-white">${Object.keys(u.history).join(", ")}</span></div>`;
+                let hKeys = Object.keys(u.history);
+                historyHtml = `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">借款歷史: ${hKeys.map(k => `<button onclick="viewHistory('${id}','${k}')" class="text-indigo-400 underline mx-1">${k}</button>`).join('')}</div>`;
             }
-            // --- 新增的功能區塊結束 ---
 
             return `
             <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700">
                 <div class="flex justify-between items-start mb-4">
-                    <h2 class="text-xl font-bold">${u.name}</h2>
+                    <h2 class="text-xl font-bold">${u.name} ${u.history ? '('+Object.keys(u.history).length+')' : ''}</h2>
                     <span class="text-xs px-2 py-1 bg-gray-700 rounded">${u.status}</span>
                 </div>
                 <div class="text-xs text-gray-400 space-y-1 mb-4">
@@ -150,31 +147,29 @@
             </div>`;
         }
 
-        // 新增的手機編輯函數
+        // 查看歷史詳情
+        function viewHistory(id, k) {
+            db.ref('users/'+id+'/history/'+k).once('value', snap => {
+                const h = snap.val();
+                let logs = h.allLogs ? Object.values(h.allLogs).map(l => `${l.time} 入款: ${l.amount}`).join('\n') : "無明細";
+                alert(`第 ${k} 次借款紀錄\n本金: ${h.loanAmount}\n還款明細:\n${logs}`);
+            });
+        }
+
         function editPhone(id) {
             let newPhone = prompt("請輸入新手機號碼：");
-            if (newPhone != null && newPhone != "") {
-                updateVal(id, 'password', newPhone);
-            }
+            if (newPhone) updateVal(id, 'password', newPhone);
         }
 
         function approveLoan(id) {
             const amt = parseInt(document.getElementById('amt_'+id).value);
             const days = parseInt(document.getElementById('days_'+id).value);
             const deduct = parseInt(document.getElementById('deduct_'+id).value || 0);
-            if(!days || days < 1) return alert("請輸入正確天數");
-            
             const daily = amt / days;
-            const balance = amt - (daily * deduct);
-            
             db.ref('users/'+id).update({
-                status: 'loaning',
-                loanAmount: amt,
-                loanDays: days,
-                dailyPayment: daily,
-                balance: balance,
-                loanDate: new Date().toLocaleDateString()
-            }).then(() => alert("撥款成功！餘額已更新"));
+                status: 'loaning', loanAmount: amt, loanDays: days, dailyPayment: daily,
+                balance: amt - (daily * deduct), loanDate: new Date().toLocaleDateString()
+            }).then(() => alert("撥款成功"));
         }
 
         function confirmPayment(uId, logId, amount) {
@@ -182,29 +177,24 @@
                 const u = s.val();
                 const newBalance = (u.balance || 0) - amount;
                 
-                // 如果餘額小於等於0，執行結清歸檔
+                // 將繳款紀錄存入暫存，供結清時打包
+                db.ref('users/'+uId+'/payLogs/'+logId).update({ confirmed: true });
+
                 if (newBalance <= 0) {
-                    let historyRef = db.ref('users/' + uId + '/history');
-                    historyRef.once('value', hSnap => {
+                    let hRef = db.ref('users/' + uId + '/history');
+                    hRef.once('value', hSnap => {
                         let count = hSnap.numChildren() + 1;
-                        historyRef.child(count).set({
-                            amount: u.loanAmount,
-                            date: new Date().toLocaleDateString()
+                        hRef.child(count).set({
+                            loanAmount: u.loanAmount,
+                            date: new Date().toLocaleDateString(),
+                            allLogs: u.payLogs // 把結清當下的所有還款紀錄打包存進去
                         });
                     });
-                    
-                    db.ref('users/' + uId).update({
-                        balance: 0,
-                        status: 'paid'
-                    });
+                    db.ref('users/' + uId).update({ balance: 0, status: 'paid', payLogs: null });
                 } else {
-                    db.ref('users/' + uId).update({
-                        balance: newBalance
-                    });
+                    db.ref('users/' + uId).update({ balance: newBalance });
                 }
-                
-                db.ref('users/'+uId+'/payLogs/'+logId).update({ confirmed: true });
-                alert("已確認收款，餘額扣除 " + amount);
+                alert("已確認入帳");
             });
         }
 
