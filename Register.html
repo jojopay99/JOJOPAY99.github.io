@@ -63,7 +63,7 @@
             
             <div class="bg-[#1f1f2e] p-4 rounded-2xl border border-indigo-900">
                 <p class="text-indigo-300 text-sm mb-2 font-bold">⚠️ 自拍認證教學：</p>
-                <p class="text-gray-300 text-xs mb-3">請左手持身分證（勿擋住字面及照片）與您一起自拍，確保影像清晰。</p>
+                <p class="text-gray-300 text-xs mb-3">請手持身分證自拍，確保影像清晰(勿擋住字面及照片）。</p>
                 <div onclick="document.getElementById('f5').click()" class="border-2 border-dashed border-gray-600 rounded-xl p-4 text-center cursor-pointer">
                     <p id="btn-f5" class="text-gray-400">點擊上傳自拍照片</p>
                 </div>
@@ -126,7 +126,7 @@
                 loanAmount: 5000,
                 payCount: 0
             }).then(() => { 
-                alert("註冊成功！系統已預設額度為 5000 元。"); 
+                alert("恭喜註冊會員成功，歡迎申請貸款！"); 
                 window.location.href = "index.html"; 
             }).catch(err => { alert("錯誤: " + err.message); });
         }
