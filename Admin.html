@@ -1,226 +1,232 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <title>JOJOPAY | 完整管理後台</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <meta charset="UTF-8">
+    <title>JOJOPAY | 完整管理後台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
 <body class="bg-gray-900 text-white p-8">
-    <div id="loginBox" class="max-w-xs mx-auto mt-20 p-8 bg-gray-800 rounded-3xl border border-gray-700">
-        <h2 class="text-xl font-bold mb-6 text-center">管理後台登入</h2>
-        <input type="password" id="admP" placeholder="管理密碼" class="w-full p-3 mb-4 bg-black rounded-xl border border-gray-600 text-center text-white">
-        <button onclick="checkAdmin()" class="w-full bg-blue-600 py-3 rounded-xl font-bold">進入後台</button>
-    </div>
+    <div id="loginBox" class="max-w-xs mx-auto mt-20 p-8 bg-gray-800 rounded-3xl border border-gray-700">
+        <h2 class="text-xl font-bold mb-6 text-center">管理後台登入</h2>
+        <input type="password" id="admP" placeholder="管理密碼" class="w-full p-3 mb-4 bg-black rounded-xl border border-gray-600 text-center text-white">
+        <button onclick="checkAdmin()" class="w-full bg-blue-600 py-3 rounded-xl font-bold">進入後台</button>
+    </div>
 
-    <div id="adminPanel" style="display:none;" class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6">JOJOPAY 管理系統</h1>
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8 text-center text-sm">
-            <div onclick="setView('pending_user')" class="bg-gray-800 p-4 rounded-2xl border border-yellow-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">會員申請</p><h2 id="s_pending" class="text-xl font-bold">0</h2>
-            </div>
-            <div onclick="setView('verified')" class="bg-gray-800 p-4 rounded-2xl border border-green-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">正式會員</p><h2 id="s_verified" class="text-xl font-bold">0</h2>
-            </div>
-            <div onclick="setView('applying_loan')" class="bg-gray-800 p-4 rounded-2xl border border-indigo-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">貸款申請</p><h2 id="s_appLoan" class="text-xl font-bold">0</h2>
-            </div>
-            <div onclick="setView('loaning')" class="bg-gray-800 p-4 rounded-2xl border border-blue-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">已貸款</p><h2 id="s_loaning" class="text-xl font-bold">0</h2>
-            </div>
-            <div onclick="setView('paid')" class="bg-gray-800 p-4 rounded-2xl border border-gray-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">已還款</p><h2 id="s_paid" class="text-xl font-bold">0</h2>
-            </div>
-            <div onclick="setView('bad_debt')" class="bg-gray-800 p-4 rounded-2xl border border-red-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">未正常還款</p><h2 id="s_bad" class="text-xl font-bold">0</h2>
-            </div>
-            <div class="bg-gray-800 p-4 rounded-2xl border border-gray-500">
-                <p class="text-gray-400">總會員</p><h2 id="s_total" class="text-xl font-bold">0</h2>
-            </div>
-        </div>
+    <div id="adminPanel" style="display:none;" class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">JOJOPAY 管理系統</h1>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8 text-center text-sm">
+            <div onclick="setView('pending_user')" class="bg-gray-800 p-4 rounded-2xl border border-yellow-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">會員申請</p><h2 id="s_pending" class="text-xl font-bold">0</h2>
+            </div>
+            <div onclick="setView('verified')" class="bg-gray-800 p-4 rounded-2xl border border-green-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">正式會員</p><h2 id="s_verified" class="text-xl font-bold">0</h2>
+            </div>
+            <div onclick="setView('applying_loan')" class="bg-gray-800 p-4 rounded-2xl border border-indigo-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">貸款申請</p><h2 id="s_appLoan" class="text-xl font-bold">0</h2>
+            </div>
+            <div onclick="setView('loaning')" class="bg-gray-800 p-4 rounded-2xl border border-blue-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">已貸款</p><h2 id="s_loaning" class="text-xl font-bold">0</h2>
+            </div>
+            <div onclick="setView('paid')" class="bg-gray-800 p-4 rounded-2xl border border-gray-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">已還款</p><h2 id="s_paid" class="text-xl font-bold">0</h2>
+            </div>
+            <div onclick="setView('bad_debt')" class="bg-gray-800 p-4 rounded-2xl border border-red-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">未正常還款</p><h2 id="s_bad" class="text-xl font-bold">0</h2>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-2xl border border-gray-500">
+                <p class="text-gray-400">總會員</p><h2 id="s_total" class="text-xl font-bold">0</h2>
+            </div>
+        </div>
 
-        <h2 id="currentTitle" class="text-xl font-bold mb-4 text-indigo-400">請選擇上方分類查看名單</h2>
-        <div id="userList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-    </div>
+        <h2 id="currentTitle" class="text-xl font-bold mb-4 text-indigo-400">請選擇上方分類查看名單</h2>
+        <div id="userList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
 
-    <script>
-        const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        let currentView = '';
+    <script>
+        const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
+        let currentView = '';
 
-        function checkAdmin() {
-            if(document.getElementById('admP').value === '0895') {
-                document.getElementById('loginBox').style.display = 'none';
-                document.getElementById('adminPanel').style.display = 'block';
-                loadData();
-            } else { alert("密碼錯誤"); }
-        }
+        function checkAdmin() {
+            if(document.getElementById('admP').value === '0895') {
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                loadData();
+            } else { alert("密碼錯誤"); }
+        }
 
-        function setView(v) { currentView = v; loadData(); }
+        function setView(v) { currentView = v; loadData(); }
 
-        function loadData() {
-            db.ref('users').on('value', snap => {
-                const users = snap.val() || {};
-                let html = '', stats = { pending_user:0, verified:0, applying_loan:0, loaning:0, paid:0, bad_debt:0, total:0 };
-                for(let id in users) {
-                    const u = users[id];
-                    stats.total++;
-                    if(stats[u.status] !== undefined) stats[u.status]++;
-                    if(u.status === currentView) html += renderUserCard(id, u);
-                }
-                document.getElementById('userList').innerHTML = html || '<p class="text-gray-500">此分類目前無資料</p>';
-                document.getElementById('s_pending').innerText = stats.pending_user;
-                document.getElementById('s_verified').innerText = stats.verified;
-                document.getElementById('s_appLoan').innerText = stats.applying_loan;
-                document.getElementById('s_loaning').innerText = stats.loaning;
-                document.getElementById('s_paid').innerText = stats.paid;
-                document.getElementById('s_bad').innerText = stats.bad_debt;
-                document.getElementById('s_total').innerText = stats.total;
-            });
-        }
+        function loadData() {
+            db.ref('users').on('value', snap => {
+                const users = snap.val() || {};
+                let html = '', stats = { pending_user:0, verified:0, applying_loan:0, loaning:0, paid:0, bad_debt:0, total:0 };
+                for(let id in users) {
+                    const u = users[id];
+                    stats.total++;
+                    if(stats[u.status] !== undefined) stats[u.status]++;
+                    if(u.status === currentView) html += renderUserCard(id, u);
+                }
+                document.getElementById('userList').innerHTML = html || '<p class="text-gray-500">此分類目前無資料</p>';
+                document.getElementById('s_pending').innerText = stats.pending_user;
+                document.getElementById('s_verified').innerText = stats.verified;
+                document.getElementById('s_appLoan').innerText = stats.applying_loan;
+                document.getElementById('s_loaning').innerText = stats.loaning;
+                document.getElementById('s_paid').innerText = stats.paid;
+                document.getElementById('s_bad').innerText = stats.bad_debt;
+                document.getElementById('s_total').innerText = stats.total;
+            });
+        }
 
 function renderUserCard(id, u) {
-    let actionHtml = '';
-    
-    // 狀態分流邏輯
-    if(u.status === 'pending_user') {
-        actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
-    } else if(u.status === 'verified') {
-        actionHtml = `
-            <div class="p-3 bg-black rounded-xl border border-gray-700 mb-2 text-xs">
-                <p class="text-gray-400 mb-1">設定建議額度</p>
-                <input type="number" id="limit_${id}" value="${u.loanAmount || 5000}" class="w-full bg-gray-800 p-2 rounded">
-                <button onclick="updateVal('${id}', 'loanAmount', document.getElementById('limit_${id}').value)" class="mt-2 w-full bg-indigo-600 py-1 rounded">儲存額度</button>
-            </div>`;
-    } else if(u.status === 'applying_loan' || u.status === 'loaning') {
-        actionHtml = `
-            <div class="p-3 bg-indigo-900/30 rounded-xl border border-indigo-500 space-y-2">
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <input type="number" id="amt_${id}" value="${u.loanAmount || 5000}" placeholder="貸款金額" class="bg-black p-1 rounded">
-                    <input type="number" id="days_${id}" value="${u.loanDays || ''}" placeholder="天數" class="bg-black p-1 rounded">
-                    <input type="number" id="deduct_${id}" value="${u.deduct || 0}" placeholder="扣除金額" class="bg-black p-1 rounded col-span-2">
-                </div>
-                <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">撥款/更新設定</button>
-            </div>`;
-    } else if(u.status === 'paid') {
-        actionHtml = `<button onclick="updateVal('${id}', 'status', 'applying_loan')" class="w-full bg-blue-600 py-2 rounded-xl font-bold mb-2">重新發起貸款</button>`;
-    }
+    let actionHtml = '';
+    
+    // 狀態分流邏輯
+    if(u.status === 'pending_user') {
+        actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
+    } else if(u.status === 'verified') {
+        actionHtml = `
+            <div class="p-3 bg-black rounded-xl border border-gray-700 mb-2 text-xs">
+                <p class="text-gray-400 mb-1">設定建議額度</p>
+                <input type="number" id="limit_${id}" value="${u.loanAmount || 5000}" class="w-full bg-gray-800 p-2 rounded">
+                <button onclick="updateVal('${id}', 'loanAmount', document.getElementById('limit_${id}').value)" class="mt-2 w-full bg-indigo-600 py-1 rounded">儲存額度</button>
+            </div>`;
+    } else if(u.status === 'applying_loan' || u.status === 'loaning') {
+        actionHtml = `
+            <div class="p-3 bg-indigo-900/30 rounded-xl border border-indigo-500 space-y-2">
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <input type="number" id="amt_${id}" value="${u.loanAmount || 5000}" placeholder="貸款金額" class="bg-black p-1 rounded">
+                    <input type="number" id="days_${id}" value="${u.loanDays || ''}" placeholder="天數" class="bg-black p-1 rounded">
+                    <input type="number" id="deduct_${id}" value="${u.deduct || 0}" placeholder="扣除金額" class="bg-black p-1 rounded col-span-2">
+                </div>
+                <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">撥款/更新設定</button>
+            </div>`;
+    } else if(u.status === 'paid') {
+        actionHtml = `<button onclick="updateVal('${id}', 'status', 'applying_loan')" class="w-full bg-blue-600 py-2 rounded-xl font-bold mb-2">重新發起貸款</button>`;
+    }
 
-    // 計算進度條
-    let progressHtml = "";
-    if (u.status === 'loaning' && u.loanAmount) {
-        const progress = Math.min(100, Math.round(((u.loanAmount - (u.balance || 0)) / u.loanAmount) * 100));
-        progressHtml = `
-            <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
-                <div class="bg-blue-600 h-2 rounded-full" style="width: ${progress}%"></div>
-            </div>
-            <p class="text-[10px] text-gray-500 mt-1 text-right">還款進度: ${progress}%</p>`;
-    }
+    // 計算進度條
+    let progressHtml = "";
+    if (u.status === 'loaning' && u.loanAmount) {
+        const progress = Math.min(100, Math.round(((u.loanAmount - (u.balance || 0)) / u.loanAmount) * 100));
+        progressHtml = `
+            <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+                <div class="bg-blue-600 h-2 rounded-full" style="width: ${progress}%"></div>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-1 text-right">還款進度: ${progress}%</p>`;
+    }
 
-    let badDebtHtml = (u.status === 'bad_debt' || u.status === 'paid') ? `...` : ''; // 原有代碼
-    let payLogHtml = ''; // 原有代碼...
-    let historyHtml = ""; // 原有代碼...
+    // 呆帳處理區
+    let badDebtHtml = (u.status === 'bad_debt' || u.status === 'paid') ? `
+        <div class="mt-4 p-3 bg-red-900/20 border border-red-600 rounded-xl">
+            <input type="number" id="badAmt_${id}" placeholder="處理金額" class="w-full bg-black p-2 rounded mb-2">
+            <button onclick="processBadDebt('${id}')" class="w-full bg-red-600 py-2 rounded font-bold text-xs">標記/處理呆帳</button>
+        </div>` : '';
 
-    return `
-    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700">
-        <h2 class="text-xl font-bold mb-4">${u.name}</h2>
-        <div class="text-xs text-gray-400 space-y-1 mb-4">
-            <p>身分證: ${id}</p>
-            <p>手機: ${u.password}</p>
-            ${u.balance !== undefined ? `<p class="text-green-400 font-bold">剩餘: ${u.balance}</p>` : ''}
-            ${progressHtml}
-        </div>
-        ${actionHtml}
-        ${payLogHtml}
-        ${badDebtHtml}
-        ${historyHtml}
-        <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
-    </div>`;
+    // 付款紀錄確認區
+    let payLogHtml = '';
+    if(u.payLogs) {
+        Object.entries(u.payLogs).forEach(([logId, log]) => {
+            if(!log.confirmed) {
+                payLogHtml += `
+                <div class="mt-4 p-3 bg-yellow-900/20 border border-yellow-600 rounded-xl text-xs">
+                    <p>收到: ${log.amount} 元</p>
+                    ${log.img ? `<a href="${log.img}" target="_blank" class="text-blue-400 underline">查看水單</a>` : ''}
+                    <button onclick="confirmPayment('${id}', '${logId}', ${log.amount})" class="w-full mt-2 bg-yellow-600 py-1 rounded font-bold">確認入帳</button>
+                </div>`;
+            }
+        });
+    }
+
+    let historyHtml = u.history ? `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">歷史紀錄: ${Object.keys(u.history).map(k => `<button onclick="viewHistory('${id}','${k}')" class="text-indigo-400 underline mx-1">${k}</button>`).join('')}</div>` : '';
+
+    return `
+    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700">
+        <h2 class="text-xl font-bold mb-4">${u.name}</h2>
+        <div class="text-xs text-gray-400 space-y-1 mb-4">
+            <p>身分證: ${id}</p>
+            <p>手機: ${u.password}</p>
+            ${u.balance !== undefined ? `<p class="text-green-400 font-bold">剩餘: ${u.balance}</p>` : ''}
+            ${progressHtml}
+        </div>
+        ${actionHtml}
+        ${payLogHtml}
+        ${badDebtHtml}
+        ${historyHtml}
+        <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
+    </div>`;
 }
-function viewHistory(id, k) {
-    db.ref('users/' + id + '/history/' + k).once('value', snap => {
-        const h = snap.val();
-        if (!h) return alert("紀錄讀取失敗");
-
-        // 整理歷史紀錄顯示字串
-        let logsStr = "";
-        if (h.allLogs) {
-            Object.values(h.allLogs).forEach(l => {
-                if (l.confirmed) logsStr += `\n${l.time} 入款: ${l.amount}`;
-            });
-        }
-
-        // 統一顯示詳細資訊
-        alert(`借款日期: ${h.loanDate || '無'}
-總金額: ${h.loanAmount || 0}
-當期應繳: ${h.currentDue || 0}
-剩餘總額: ${h.balance || 0}
---------------------${logsStr}
---------------------
-狀態: ${h.status || '結清'}`);
-    });
-}
-
 function confirmPayment(uId, logId, amount) {
-    const userRef = db.ref('users/' + uId);
-    
-    userRef.transaction(function(u) {
-        if (!u) return u;
-        
-        // 1. 扣除總餘額
-        u.balance -= amount;
-        
-        // 2. 處理當期應繳與滾動邏輯
-        if (amount >= u.currentDue) {
-            // 入帳大於或等於應繳，將差額補到下一期（重新計算剩餘的應繳）
-            // 這裡假設每一期應繳固定為 initialCurrentDue，若無則用原本的計算
-            let diff = amount - u.currentDue;
-            u.currentDue = Math.round(u.loanAmount / u.loanDays) - diff; 
-        } else {
-            // 入帳小於應繳，減少當期應繳
-            u.currentDue -= amount;
-        }
-        
-        // 3. 標記紀錄
-        if (!u.payLogs) u.payLogs = {};
-        if (u.payLogs[logId]) {
-            u.payLogs[logId].confirmed = true;
-            u.payLogs[logId].time = new Date().toLocaleString();
-        }
+    const userRef = db.ref('users/' + uId);
+    
+    userRef.transaction(function(u) {
+        if (!u) return u;
+        
+        // 1. 扣除總餘額
+        u.balance -= amount;
+        
+        // 2. 處理當期應繳與滾動邏輯
+        if (amount >= u.currentDue) {
+            // 入帳大於或等於應繳，將差額補到下一期（重新計算剩餘的應繳）
+            // 這裡假設每一期應繳固定為 initialCurrentDue，若無則用原本的計算
+            let diff = amount - u.currentDue;
+            u.currentDue = Math.round(u.loanAmount / u.loanDays) - diff; 
+        } else {
+            // 入帳小於應繳，減少當期應繳
+            u.currentDue -= amount;
+        }
+        
+        // 3. 標記紀錄
+        if (!u.payLogs) u.payLogs = {};
+        if (u.payLogs[logId]) {
+            u.payLogs[logId].confirmed = true;
+            u.payLogs[logId].time = new Date().toLocaleString();
+        }
 
-        // 4. 結清檢查
-        if (u.balance <= 0) {
-            u.status = 'paid';
-            u.balance = 0;
-            u.currentDue = 0;
-            // 存入歷史紀錄 (省略部分細節)
-        }
-        return u;
-    }, function(error, committed) {
-        if (committed) alert("入帳確認成功！");
-    });
+        // 4. 結清檢查
+        if (u.balance <= 0) {
+            u.status = 'paid';
+            u.balance = 0;
+            u.currentDue = 0;
+            // 存入歷史紀錄 (省略部分細節)
+        }
+        return u;
+    }, function(error, committed) {
+        if (committed) alert("入帳確認成功！");
+    });
 }
 
 function approveLoan(id) {
-    const amt = parseInt(document.getElementById('amt_'+id).value) || 0;
-    const days = parseInt(document.getElementById('days_'+id).value) || 1; // 預設至少1天
-    const deduct = parseInt(document.getElementById('deduct_'+id).value) || 0;
-    
-    const installment = Math.round(amt / days); 
+    const amt = parseInt(document.getElementById('amt_'+id).value) || 0;
+    const days = parseInt(document.getElementById('days_'+id).value) || 1; // 預設至少1天
+    const deduct = parseInt(document.getElementById('deduct_'+id).value) || 0;
+    
+    const installment = Math.round(amt / days); 
 
-    db.ref('users/'+id).update({
-        status: 'loaning',
-        loanAmount: amt,
-        loanDays: days,
-        currentDue: installment,
-        balance: amt - deduct,
-        loanDate: new Date().toLocaleDateString()
-    }).then(() => alert("撥款成功"));
+    db.ref('users/'+id).update({
+        status: 'loaning',
+        loanAmount: amt,
+        loanDays: days,
+        currentDue: installment,
+        balance: amt - deduct,
+        loanDate: new Date().toLocaleDateString()
+    }).then(() => alert("撥款成功"));
 }
-
-        function updateVal(id, field, val) { let o = {}; o[field] = val; db.ref('users/'+id).update(o).then(() => alert("成功")); }
-        function deleteUser(id) { if(confirm("確定刪除？")) db.ref('users/'+id).remove(); }
-    </script>
+function processBadDebt(id) {
+    const amt = parseInt(document.getElementById('badAmt_'+id).value) || 0;
+    if(amt === 0) return alert("請輸入處理金額");
+    
+    // 將呆帳處理紀錄寫入資料庫
+    db.ref('users/' + id).update({
+        status: 'bad_debt',
+        balance: 0, // 結清處理
+        currentDue: 0
+    }).then(() => alert("呆帳已處理"));
+}
+        function updateVal(id, field, val) { let o = {}; o[field] = val; db.ref('users/'+id).update(o).then(() => alert("成功")); }
+        function deleteUser(id) { if(confirm("確定刪除？")) db.ref('users/'+id).remove(); }
+    </script>
 </body>
 </html>
