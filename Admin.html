@@ -17,28 +17,28 @@
     <div id="adminPanel" style="display:none;" class="max-w-7xl mx-auto">
         <h1 class="text-3xl font-bold mb-6">JOJOPAY 管理系統</h1>
         
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8 text-center text-sm">
-            <div onclick="setView('pending_user')" class="bg-gray-800 p-4 rounded-2xl border border-yellow-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">會員申請</p><h2 id="s_pending" class="text-xl font-bold">0</h2>
-            </div>
-            <div onclick="setView('verified')" class="bg-gray-800 p-4 rounded-2xl border border-green-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">正式會員</p><h2 id="s_verified" class="text-xl font-bold">0</h2>
-            </div>
-            <div onclick="setView('applying_loan')" class="bg-gray-800 p-4 rounded-2xl border border-indigo-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">貸款申請</p><h2 id="s_appLoan" class="text-xl font-bold">0</h2>
-            </div>
-            <div onclick="setView('loaning')" class="bg-gray-800 p-4 rounded-2xl border border-blue-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">已貸款</p><h2 id="s_loaning" class="text-xl font-bold">0</h2>
-            </div>
-            <div onclick="setView('paid')" class="bg-gray-800 p-4 rounded-2xl border border-gray-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">已還款</p><h2 id="s_paid" class="text-xl font-bold">0</h2>
-            </div>
-            <div onclick="setView('bad_debt')" class="bg-gray-800 p-4 rounded-2xl border border-red-600 cursor-pointer hover:bg-gray-700">
-                <p class="text-gray-400">未正常還款</p><h2 id="s_bad" class="text-xl font-bold">0</h2>
-            </div>
-            <div class="bg-gray-800 p-4 rounded-2xl border border-gray-500">
-                <p class="text-gray-400">總會員</p><h2 id="s_total" class="text-xl font-bold">0</h2>
-            </div>
+        <div class="flex flex-wrap gap-4 mb-8 text-center text-sm justify-center">
+    <div onclick="setView('pending_user')" class="bg-gray-800 p-4 rounded-2xl border border-yellow-600 cursor-pointer hover:bg-gray-700 w-32">
+        <p class="text-gray-400">會員申請</p><h2 id="s_pending" class="text-xl font-bold">0</h2>
+    </div>
+    <div onclick="setView('verified')" class="bg-gray-800 p-4 rounded-2xl border border-green-600 cursor-pointer hover:bg-gray-700 w-32">
+        <p class="text-gray-400">正式會員</p><h2 id="s_verified" class="text-xl font-bold">0</h2>
+    </div>
+    <div onclick="setView('applying_loan')" class="bg-gray-800 p-4 rounded-2xl border border-indigo-600 cursor-pointer hover:bg-gray-700 w-32">
+        <p class="text-gray-400">貸款申請</p><h2 id="s_appLoan" class="text-xl font-bold">0</h2>
+    </div>
+    <div onclick="setView('loaning')" class="bg-gray-800 p-4 rounded-2xl border border-blue-600 cursor-pointer hover:bg-gray-700 w-32">
+        <p class="text-gray-400">已貸款</p><h2 id="s_loaning" class="text-xl font-bold">0</h2>
+    </div>
+    <div onclick="setView('paid')" class="bg-gray-800 p-4 rounded-2xl border border-gray-600 cursor-pointer hover:bg-gray-700 w-32">
+        <p class="text-gray-400">已還款</p><h2 id="s_paid" class="text-xl font-bold">0</h2>
+    </div>
+    <div onclick="setView('bad_debt')" class="bg-gray-800 p-4 rounded-2xl border border-red-600 cursor-pointer hover:bg-gray-700 w-32">
+        <p class="text-gray-400">未正常還款</p><h2 id="s_bad" class="text-xl font-bold">0</h2>
+    </div>
+    <div class="bg-gray-800 p-4 rounded-2xl border border-gray-500 w-32">
+        <p class="text-gray-400">總會員</p><h2 id="s_total" class="text-xl font-bold">0</h2>
+    </div>
         </div>
 <div class="mb-6">
     <input type="text" id="searchInput" onkeyup="filterUsers()" 
@@ -46,7 +46,7 @@
            class="w-full max-w-md p-3 bg-gray-800 border border-gray-600 rounded-xl text-white">
 </div>
         <h2 id="currentTitle" class="text-xl font-bold mb-4 text-indigo-400">請選擇上方分類查看名單</h2>
-        <div id="userList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+<div id="userList" class="flex flex-wrap gap-6 justify-start"></div>
     </div>
 
     <script>
@@ -85,82 +85,79 @@
         }
 
 function renderUserCard(id, u) {
-    let actionHtml = '';
-    
-    // 狀態分流邏輯
-    if(u.status === 'pending_user') {
-        actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
-    } else if(u.status === 'verified') {
-        actionHtml = `
-            <div class="p-3 bg-black rounded-xl border border-gray-700 mb-2 text-xs">
-                <p class="text-gray-400 mb-1">設定建議額度</p>
-                <input type="number" id="limit_${id}" value="${u.loanAmount || 5000}" class="w-full bg-gray-800 p-2 rounded">
-                <button onclick="updateVal('${id}', 'loanAmount', document.getElementById('limit_${id}').value)" class="mt-2 w-full bg-indigo-600 py-1 rounded">儲存額度</button>
-            </div>`;
-    } else if(u.status === 'applying_loan' || u.status === 'loaning') {
-        actionHtml = `
-            <div class="p-3 bg-indigo-900/30 rounded-xl border border-indigo-500 space-y-2">
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <input type="number" id="amt_${id}" value="${u.loanAmount || 5000}" placeholder="貸款金額" class="bg-black p-1 rounded">
-                    <input type="number" id="days_${id}" value="${u.loanDays || ''}" placeholder="天數" class="bg-black p-1 rounded">
-                    <input type="number" id="deduct_${id}" value="${u.deduct || 0}" placeholder="扣除金額" class="bg-black p-1 rounded col-span-2">
-                </div>
-                <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">撥款/更新設定</button>
-            </div>`;
-    } else if(u.status === 'paid') {
-        actionHtml = `<button onclick="updateVal('${id}', 'status', 'applying_loan')" class="w-full bg-blue-600 py-2 rounded-xl font-bold mb-2">重新發起貸款</button>`;
-    }
+    let actionHtml = '';
+    
+    // 狀態分流邏輯
+    if(u.status === 'pending_user') {
+        actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
+    } else if(u.status === 'verified') {
+        actionHtml = `
+            <div class="p-3 bg-black rounded-xl border border-gray-700 mb-2 text-xs">
+                <p class="text-gray-400 mb-1">設定建議額度</p>
+                <input type="number" id="limit_${id}" value="${u.loanAmount || 5000}" class="w-full bg-gray-800 p-2 rounded">
+                <button onclick="updateVal('${id}', 'loanAmount', document.getElementById('limit_${id}').value)" class="mt-2 w-full bg-indigo-600 py-1 rounded">儲存額度</button>
+            </div>`;
+    } else if(u.status === 'applying_loan' || u.status === 'loaning') {
+        actionHtml = `
+            <div class="p-3 bg-indigo-900/30 rounded-xl border border-indigo-500 space-y-2">
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <input type="number" id="amt_${id}" value="${u.loanAmount || 5000}" placeholder="貸款金額" class="bg-black p-1 rounded">
+                    <input type="number" id="days_${id}" value="${u.loanDays || ''}" placeholder="天數" class="bg-black p-1 rounded">
+                    <input type="number" id="deduct_${id}" value="${u.deduct || 0}" placeholder="扣除金額" class="bg-black p-1 rounded col-span-2">
+                </div>
+                <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">撥款/更新設定</button>
+            </div>`;
+    } else if(u.status === 'paid') {
+        actionHtml = `<button onclick="updateVal('${id}', 'status', 'applying_loan')" class="w-full bg-blue-600 py-2 rounded-xl font-bold mb-2">重新發起貸款</button>`;
+    }
 
-    // 計算進度條
-    let progressHtml = "";
-    if (u.status === 'loaning' && u.loanAmount) {
-        const progress = Math.min(100, Math.round(((u.loanAmount - (u.balance || 0)) / u.loanAmount) * 100));
-        progressHtml = `
-            <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
-                <div class="bg-blue-600 h-2 rounded-full" style="width: ${progress}%"></div>
-            </div>
-            <p class="text-[10px] text-gray-500 mt-1 text-right">還款進度: ${progress}%</p>`;
-    }
+    let progressHtml = "";
+    if (u.status === 'loaning' && u.loanAmount) {
+        const progress = Math.min(100, Math.round(((u.loanAmount - (u.balance || 0)) / u.loanAmount) * 100));
+        progressHtml = `
+            <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+                <div class="bg-blue-600 h-2 rounded-full" style="width: ${progress}%"></div>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-1 text-right">還款進度: ${progress}%</p>`;
+    }
 
-    // 呆帳處理區
-    let badDebtHtml = (u.status === 'bad_debt' || u.status === 'paid') ? `
-        <div class="mt-4 p-3 bg-red-900/20 border border-red-600 rounded-xl">
-            <input type="number" id="badAmt_${id}" placeholder="處理金額" class="w-full bg-black p-2 rounded mb-2">
-            <button onclick="processBadDebt('${id}')" class="w-full bg-red-600 py-2 rounded font-bold text-xs">標記/處理呆帳</button>
-        </div>` : '';
+    let badDebtHtml = (u.status === 'bad_debt' || u.status === 'paid') ? `
+        <div class="mt-4 p-3 bg-red-900/20 border border-red-600 rounded-xl">
+            <input type="number" id="badAmt_${id}" placeholder="處理金額" class="w-full bg-black p-2 rounded mb-2">
+            <button onclick="processBadDebt('${id}')" class="w-full bg-red-600 py-2 rounded font-bold text-xs">標記/處理呆帳</button>
+        </div>` : '';
 
-    // 付款紀錄確認區
-    let payLogHtml = '';
-    if(u.payLogs) {
-        Object.entries(u.payLogs).forEach(([logId, log]) => {
-            if(!log.confirmed) {
-                payLogHtml += `
-                <div class="mt-4 p-3 bg-yellow-900/20 border border-yellow-600 rounded-xl text-xs">
-                    <p>收到: ${log.amount} 元</p>
-                    ${log.img ? `<a href="${log.img}" target="_blank" class="text-blue-400 underline">查看水單</a>` : ''}
-                    <button onclick="confirmPayment('${id}', '${logId}', ${log.amount})" class="w-full mt-2 bg-yellow-600 py-1 rounded font-bold">確認入帳</button>
-                </div>`;
-            }
-        });
-    }
+    let payLogHtml = '';
+    if(u.payLogs) {
+        Object.entries(u.payLogs).forEach(([logId, log]) => {
+            if(!log.confirmed) {
+                payLogHtml += `
+                <div class="mt-4 p-3 bg-yellow-900/20 border border-yellow-600 rounded-xl text-xs">
+                    <p>收到: ${log.amount} 元</p>
+                    ${log.img ? `<a href="${log.img}" target="_blank" class="text-blue-400 underline">查看水單</a>` : ''}
+                    <button onclick="confirmPayment('${id}', '${logId}', ${log.amount})" class="w-full mt-2 bg-yellow-600 py-1 rounded font-bold">確認入帳</button>
+                </div>`;
+            }
+        });
+    }
 
-    let historyHtml = u.history ? `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">歷史紀錄: ${Object.keys(u.history).map(k => `<button onclick="viewHistory('${id}','${k}')" class="text-indigo-400 underline mx-1">${k}</button>`).join('')}</div>` : '';
+    let historyHtml = u.history ? `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">歷史紀錄: ${Object.keys(u.history).map(k => `<button onclick="viewHistory('${id}','${k}')" class="text-indigo-400 underline mx-1">${k}</button>`).join('')}</div>` : '';
 
-    return `
-    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700">
-        <h2 class="text-xl font-bold mb-4">${u.name}</h2>
-        <div class="text-xs text-gray-400 space-y-1 mb-4">
-            <p>身分證: ${id}</p>
-            <p>手機: ${u.password}</p>
-            ${u.balance !== undefined ? `<p class="text-green-400 font-bold">剩餘: ${u.balance}</p>` : ''}
-            ${progressHtml}
-        </div>
-        ${actionHtml}
-        ${payLogHtml}
-        ${badDebtHtml}
-        ${historyHtml}
-        <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
-    </div>`;
+    return `
+    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 w-full md:w-80">
+        <h2 class="text-xl font-bold mb-4">${u.name}</h2>
+        <div class="text-xs text-gray-400 space-y-1 mb-4">
+            <p>身分證: ${id}</p>
+            <p>手機: ${u.password}</p>
+            ${u.balance !== undefined ? `<p class="text-green-400 font-bold">剩餘: ${u.balance}</p>` : ''}
+            ${progressHtml}
+        </div>
+        ${actionHtml}
+        ${payLogHtml}
+        ${badDebtHtml}
+        ${historyHtml}
+        <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
+    </div>`;
 }
 function confirmPayment(uId, logId, amount) {
     const userRef = db.ref('users/' + uId);
