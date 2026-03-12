@@ -144,11 +144,17 @@
         }
 
         function viewHistory(id, k) {
-            db.ref('users/'+id+'/history/'+k).once('value', s => {
-                const h = s.val();
-                let msg = `借款日期: ${h.loanDate}\n金額: ${h.loanAmount}\n天數: ${h.loanDays}\n已扣: ${h.deduct || 0}\n`;
-                if(h.allLogs) Object.values(h.allLogs).forEach(l => { msg += `${l.time} 入款: ${l.amount}\n`; });
-                alert(msg + "結清");
+            db.ref('users/'+id+'/history/'+k).once('value', snap => {
+                const h = snap.val();
+                if (!h) return alert("紀錄讀取失敗");
+                
+                let logsStr = "";
+                if(h.allLogs) {
+                    Object.values(h.allLogs).forEach(l => {
+                        if(l.confirmed) logsStr += `\n${l.time} 入款: ${l.amount}`;
+                    });
+                }
+                alert(`借款日期: ${h.loanDate || '無'}\n金額: ${h.loanAmount || 0}\n天數: ${h.loanDays || 0}\n已扣: ${h.deduct || 0}\n--------------------${logsStr}\n--------------------\n狀態: ${h.status || '結清'}`);
             });
         }
 
@@ -157,14 +163,18 @@
                 const u = s.val();
                 const newBalance = (u.balance || 0) - amount;
                 db.ref('users/'+uId+'/payLogs/'+logId).update({ confirmed: true, time: new Date().toLocaleString() });
+                
                 if (newBalance <= 0) {
                     let hRef = db.ref('users/'+uId+'/history');
                     hRef.once('value', hSnap => {
                         let count = (hSnap.numChildren() || 0) + 1;
                         hRef.child(count).set({
-                            loanDate: u.loanDate, loanAmount: u.loanAmount, loanDays: u.loanDays, 
+                            loanDate: u.loanDate, 
+                            loanAmount: u.loanAmount, 
+                            loanDays: u.loanDays, 
                             deduct: document.getElementById('deduct_'+uId) ? document.getElementById('deduct_'+uId).value : 0,
-                            allLogs: u.payLogs
+                            allLogs: u.payLogs,
+                            status: '結清'
                         });
                     });
                     db.ref('users/'+uId).update({ balance: 0, status: 'paid', payLogs: null });
