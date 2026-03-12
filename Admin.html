@@ -141,7 +141,22 @@ function renderUserCard(id, u) {
         });
     }
 
-    let historyHtml = u.history ? `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">歷史紀錄: ${Object.keys(u.history).map(k => `<button onclick="viewHistory('${id}','${k}')" class="text-indigo-400 underline mx-1">${k}</button>`).join('')}</div>` : '';
+  let historyHtml = '';
+if (u.history) {
+    historyHtml = `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">
+        <p class="mb-1 text-gray-500">歷史紀錄：</p>
+        <div class="flex flex-wrap gap-2">`;
+    
+    Object.keys(u.history).forEach(k => {
+        // 只使用 data-* 屬性，不使用 onclick
+        historyHtml += `<button data-id="${id}" data-hid="${k}" 
+            class="history-btn bg-gray-700 hover:bg-indigo-500 px-2 py-1 rounded text-indigo-300 hover:text-white transition-colors">
+            ${k}
+        </button>`;
+    });
+    
+    historyHtml += `</div></div>`;
+}
 
     return `
     <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 w-full md:w-80">
@@ -250,8 +265,46 @@ function processBadDebt(id) {
         }
     }
 }
+      function viewHistory(uId, hId) {
+    db.ref(`users/${uId}/history/${hId}`).once('value', snap => {
+        const h = snap.val();
+        const modal = document.getElementById('historyModal');
+        const content = document.getElementById('modalContent');
+        
+        if (h) {
+            content.innerHTML = `
+                <p><span class="text-gray-500">紀錄 ID:</span> ${hId}</p>
+                <p><span class="text-gray-500">撥款金額:</span> ${h.loanAmount || '無'}</p>
+                <p><span class="text-gray-500">撥款日期:</span> ${h.loanDate || '無'}</p>
+                <p><span class="text-gray-500">狀態:</span> 已完成</p>
+            `;
+        } else {
+            content.innerHTML = "找不到詳細資料。";
+        }
+        modal.classList.remove('hidden'); // 顯示 Modal
+    });
+}
         function updateVal(id, field, val) { let o = {}; o[field] = val; db.ref('users/'+id).update(o).then(() => alert("成功")); }
         function deleteUser(id) { if(confirm("確定刪除？")) db.ref('users/'+id).remove(); }
-    </script>
+   // ... 其他程式碼 ...
+function deleteUser(id) { if(confirm("確定刪除？")) db.ref('users/'+id).remove(); }
+
+// 確保這段監聽器在 script 標籤內
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.classList.contains('history-btn')) {
+        const uId = e.target.getAttribute('data-id');
+        const hId = e.target.getAttribute('data-hid');
+        viewHistory(uId, hId);
+    }
+});
+</script>
+    <div id="historyModal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-600 max-w-sm w-full mx-4">
+        <h3 class="text-xl font-bold mb-4 text-indigo-400">歷史紀錄詳情</h3>
+        <div id="modalContent" class="text-sm text-gray-300 space-y-2 mb-6"></div>
+        <button onclick="document.getElementById('historyModal').classList.add('hidden')" 
+                class="w-full bg-gray-600 py-2 rounded-xl font-bold">關閉</button>
+    </div>
+</div>
 </body>
 </html>
