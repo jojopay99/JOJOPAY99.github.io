@@ -15,21 +15,40 @@
     </div>
 
     <div id="adminPanel" style="display:none;" class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6">會員審核中心</h1>
+        <h1 class="text-3xl font-bold mb-6">JOJOPAY 管理系統</h1>
         
-        <div class="grid grid-cols-4 gap-4 mb-8 text-center">
-            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700"><p class="text-gray-400">待審核</p><h2 id="s_pending" class="text-2xl font-bold text-yellow-400">0</h2></div>
-            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700"><p class="text-gray-400">貸款中</p><h2 id="s_loan" class="text-2xl font-bold text-blue-400">0</h2></div>
-            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700"><p class="text-gray-400">呆帳</p><h2 id="s_bad" class="text-2xl font-bold text-red-400">0</h2></div>
-            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700"><p class="text-gray-400">總會員</p><h2 id="s_total" class="text-2xl font-bold text-white">0</h2></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8 text-center text-sm">
+            <div onclick="setView('pending_user')" class="bg-gray-800 p-4 rounded-2xl border border-yellow-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">會員申請</p><h2 id="s_pending" class="text-xl font-bold">0</h2>
+            </div>
+            <div onclick="setView('verified')" class="bg-gray-800 p-4 rounded-2xl border border-green-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">正式會員</p><h2 id="s_verified" class="text-xl font-bold">0</h2>
+            </div>
+            <div onclick="setView('applying_loan')" class="bg-gray-800 p-4 rounded-2xl border border-indigo-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">貸款申請</p><h2 id="s_appLoan" class="text-xl font-bold">0</h2>
+            </div>
+            <div onclick="setView('loaning')" class="bg-gray-800 p-4 rounded-2xl border border-blue-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">已貸款</p><h2 id="s_loaning" class="text-xl font-bold">0</h2>
+            </div>
+            <div onclick="setView('paid')" class="bg-gray-800 p-4 rounded-2xl border border-gray-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">已還款</p><h2 id="s_paid" class="text-xl font-bold">0</h2>
+            </div>
+            <div onclick="setView('bad_debt')" class="bg-gray-800 p-4 rounded-2xl border border-red-600 cursor-pointer hover:bg-gray-700">
+                <p class="text-gray-400">未正常還款</p><h2 id="s_bad" class="text-xl font-bold">0</h2>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-2xl border border-gray-500">
+                <p class="text-gray-400">總會員</p><h2 id="s_total" class="text-xl font-bold">0</h2>
+            </div>
         </div>
 
+        <h2 id="currentTitle" class="text-xl font-bold mb-4 text-indigo-400">請選擇上方分類查看名單</h2>
         <div id="userList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
 
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
-        
+        let currentView = '';
+
         function checkAdmin() {
             if(document.getElementById('admP').value === '0895') {
                 document.getElementById('loginBox').style.display = 'none';
@@ -38,91 +57,131 @@
             } else { alert("密碼錯誤"); }
         }
 
+        function setView(v) { currentView = v; loadData(); }
+
         function loadData() {
             db.ref('users').on('value', snap => {
                 const users = snap.val() || {};
-                let html = '', s1=0, s2=0, s3=0, s4=0;
+                let html = '', stats = { pending_user:0, verified:0, applying_loan:0, loaning:0, paid:0, bad_debt:0, total:0 };
                 
                 for(let id in users) {
                     const u = users[id];
-                    s4++;
-                    if(u.status=='pending_user') s1++;
-                    else if(u.status=='loan_active') s2++;
-                    else if(u.status=='bad_debt') s3++;
+                    stats.total++;
+                    if(stats[u.status] !== undefined) stats[u.status]++;
 
-                    // 處理圖片顯示邏輯 (包含普通證件與 extra 加分照片)
-                    let imgHtml = '';
-                    if(u.imgs) {
-                        imgHtml = Object.entries(u.imgs).map(([key, url]) => `
-                            <a href="${url}" target="_blank" rel="noopener noreferrer" class="relative">
-                                <img src="${url}" class="w-16 h-16 object-cover rounded-lg border ${key === 'extra' ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-600'}">
-                                ${key === 'extra' ? '<span class="absolute -top-1 -right-1 bg-green-500 text-[8px] rounded-full px-1">加分</span>' : ''}
-                            </a>
-                        `).join('');
-                    } else {
-                        imgHtml = '<p class="text-xs text-gray-500 p-2">無證件</p>';
+                    if(u.status === currentView) {
+                        html += renderUserCard(id, u);
                     }
-
-                    html += `
-                    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 shadow-xl">
-                        <h2 class="text-xl font-bold mb-2">${u.name}</h2>
-                        <div class="text-sm text-gray-400 space-y-2 mb-4">
-                            <p>身分證: ${id}</p>
-                            <div class="flex items-center gap-2">
-                                <p>手機: <span id="phone_${id}">${u.password || '無'}</span></p>
-                                <button onclick="enableEdit('${id}')" class="text-blue-400 text-xs hover:underline">[編輯]</button>
-                            </div>
-                            <p>工作: ${u.job || '無'} | 薪資: ${u.salary || '無'}</p>
-                            <p>銀行: ${u.bank || '無'}</p>
-                            <p>聯絡人: ${u.contacts ? u.contacts.map(c => c.name).join(', ') : '無'}</p>
-                        </div>
-                        
-                        <div class="flex gap-2 my-4 overflow-x-auto p-2 bg-black rounded-xl">
-                            ${imgHtml}
-                        </div>
-
-                        <div class="mt-4 p-3 bg-black rounded-xl border border-gray-700">
-                            <label class="text-xs text-gray-500">貸款額度</label>
-                            <input type="number" value="${u.loanAmount || 0}" onchange="updateVal('${id}', 'loanAmount', this.value)" class="w-full bg-transparent text-white font-bold">
-                            <label class="text-xs text-gray-500 mt-2 block">還款次數</label>
-                            <input type="number" value="${u.payCount || 0}" onchange="updateVal('${id}', 'payCount', this.value)" class="w-full bg-transparent text-white font-bold">
-                        </div>
-
-                        <select onchange="updateVal('${id}', 'status', this.value)" class="w-full mt-4 p-3 bg-indigo-900 rounded-xl font-bold">
-                            <option value="pending_user" ${u.status=='pending_user'?'selected':''}>待審核</option>
-                            <option value="loan_active" ${u.status=='loan_active'?'selected':''}>貸款中</option>
-                            <option value="bad_debt" ${u.status=='bad_debt'?'selected':''}>呆帳</option>
-                        </select>
-                        <button onclick="deleteUser('${id}')" class="w-full mt-2 py-2 bg-red-900 hover:bg-red-800 rounded-xl text-xs font-bold text-red-200">刪除此會員</button>
-                    </div>`;
                 }
-                document.getElementById('userList').innerHTML = html;
-                document.getElementById('s_pending').innerText = s1;
-                document.getElementById('s_loan').innerText = s2;
-                document.getElementById('s_bad').innerText = s3;
-                document.getElementById('s_total').innerText = s4;
+                document.getElementById('userList').innerHTML = html || '<p class="text-gray-500">此分類目前無資料</p>';
+                document.getElementById('s_pending').innerText = stats.pending_user;
+                document.getElementById('s_verified').innerText = stats.verified;
+                document.getElementById('s_appLoan').innerText = stats.applying_loan;
+                document.getElementById('s_loaning').innerText = stats.loaning;
+                document.getElementById('s_paid').innerText = stats.paid;
+                document.getElementById('s_bad').innerText = stats.bad_debt;
+                document.getElementById('s_total').innerText = stats.total;
             });
         }
 
-        function enableEdit(id) {
-            const span = document.getElementById('phone_'+id);
-            const newVal = prompt("請輸入新的手機號碼/密碼:", span.innerText);
-            if(newVal !== null && newVal !== "") {
-                updateVal(id, 'password', newVal);
+        function renderUserCard(id, u) {
+            let actionHtml = '';
+            
+            // 根據不同狀態提供不同操作案紐
+            if(u.status === 'pending_user') {
+                actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
+            } else if(u.status === 'verified') {
+                actionHtml = `
+                    <div class="p-3 bg-black rounded-xl border border-gray-700 mb-2 text-xs">
+                        <p class="mb-1 text-gray-400">設定顯示額度 (會員登入可見)</p>
+                        <input type="number" id="limit_${id}" value="${u.loanAmount || 5000}" class="w-full bg-gray-800 p-2 rounded">
+                        <button onclick="updateVal('${id}', 'loanAmount', document.getElementById('limit_${id}').value)" class="mt-2 text-indigo-400">儲存額度</button>
+                    </div>`;
+            } else if(u.status === 'applying_loan' || u.status === 'loaning') {
+                actionHtml = `
+                    <div class="p-3 bg-indigo-900/30 rounded-xl border border-indigo-500 space-y-2">
+                        <p class="text-xs font-bold">貸款/還款 控制台</p>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <select id="amt_${id}" class="bg-black p-1 rounded"><option value="5000">5,000</option><option value="10000">10,000</option><option value="15000">15,000</option><option value="20000">20,000</option><option value="25000">25,000</option><option value="30000">30,000</option></select>
+                            <input type="number" id="days_${id}" placeholder="天數(1-30)" class="bg-black p-1 rounded">
+                            <input type="number" id="deduct_${id}" placeholder="扣除天數" class="bg-black p-1 rounded col-span-2">
+                        </div>
+                        <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">撥款/重設貸款</button>
+                    </div>`;
             }
+
+            // 顯示還款審核
+            let payLogHtml = '';
+            if(u.payLogs) {
+                Object.entries(u.payLogs).forEach(([logId, log]) => {
+                    if(!log.confirmed) {
+                        payLogHtml += `
+                        <div class="mt-4 p-3 bg-yellow-900/20 border border-yellow-600 rounded-xl text-xs">
+                            <p>收到繳款: <span class="text-lg font-bold text-yellow-400">${log.amount}</span> 元</p>
+                            <a href="${log.img}" target="_blank" class="text-blue-400 underline">查看水單</a>
+                            <button onclick="confirmPayment('${id}', '${logId}', ${log.amount})" class="w-full mt-2 bg-yellow-600 py-1 rounded font-bold">確認入帳 (扣除餘額)</button>
+                        </div>`;
+                    }
+                });
+            }
+
+            return `
+            <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700">
+                <div class="flex justify-between items-start mb-4">
+                    <h2 class="text-xl font-bold">${u.name}</h2>
+                    <span class="text-xs px-2 py-1 bg-gray-700 rounded">${u.status}</span>
+                </div>
+                <div class="text-xs text-gray-400 space-y-1 mb-4">
+                    <p>身分證: ${id}</p>
+                    <p>手機: ${u.password}</p>
+                    ${u.balance !== undefined ? `<p class="text-green-400 font-bold">剩餘應還: ${u.balance}</p><p class="text-indigo-300">每日應繳: ${u.dailyPayment}</p>` : ''}
+                </div>
+                ${actionHtml}
+                ${payLogHtml}
+                <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
+            </div>`;
         }
 
-        function updateVal(id, field, val) { 
-            let updateObj = {}; 
-            updateObj[field] = val; 
-            db.ref('users/'+id).update(updateObj); 
+        function approveLoan(id) {
+            const amt = parseInt(document.getElementById('amt_'+id).value);
+            const days = parseInt(document.getElementById('days_'+id).value);
+            const deduct = parseInt(document.getElementById('deduct_'+id).value || 0);
+            if(!days || days < 1) return alert("請輸入正確天數");
+            
+            const daily = amt / days;
+            const balance = amt - (daily * deduct);
+            
+            db.ref('users/'+id).update({
+                status: 'loaning',
+                loanAmount: amt,
+                loanDays: days,
+                dailyPayment: daily,
+                balance: balance,
+                loanDate: new Date().toLocaleDateString()
+            }).then(() => alert("撥款成功！餘額已更新"));
         }
 
-        function deleteUser(id) {
-            if(confirm("確定要刪除會員 " + id + " 嗎？此動作無法復原！")) {
-                db.ref('users/'+id).remove().then(() => alert("刪除成功")).catch(e => alert("錯誤: " + e.message));
-            }
+        function confirmPayment(uId, logId, amount) {
+            db.ref('users/'+uId).once('value', s => {
+                const u = s.val();
+                const newBalance = (u.balance || 0) - amount;
+                const newStatus = newBalance <= 0 ? 'paid' : 'loaning';
+                
+                db.ref('users/'+uId).update({
+                    balance: newBalance,
+                    status: newStatus
+                });
+                db.ref('users/'+uId+'/payLogs/'+logId).update({ confirmed: true });
+                alert("已確認收款，餘額扣除 " + amount);
+            });
         }
+
+        function updateVal(id, field, val) {
+            let o = {}; o[field] = val;
+            db.ref('users/'+id).update(o).then(() => alert("操作成功"));
+        }
+
+        function deleteUser(id) { if(confirm("確定刪除？")) db.ref('users/'+id).remove(); }
     </script>
 </body>
 </html>
