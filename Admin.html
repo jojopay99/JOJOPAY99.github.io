@@ -165,29 +165,50 @@
             });
         }
 
-        function confirmPayment(uId, logId, amount) {
-            db.ref('users/'+uId).once('value', s => {
-                const u = s.val();
-                const newBalance = (u.balance || 0) - amount;
-                db.ref('users/'+uId+'/payLogs/'+logId).update({ confirmed: true, time: new Date().toLocaleString() });
-                if (newBalance <= 0) {
-                    let hRef = db.ref('users/'+uId+'/history');
-                    hRef.once('value', hSnap => {
-                        let count = (hSnap.numChildren() || 0) + 1;
-                        hRef.child(count).set({
-                            loanDate: u.loanDate, loanAmount: u.loanAmount, loanDays: u.loanDays, 
-                            deduct: document.getElementById('deduct_'+uId) ? document.getElementById('deduct_'+uId).value : 0,
-                            allLogs: u.payLogs, status: '結清'
-                        });
-                    });
-                    db.ref('users/'+uId).update({ balance: 0, status: 'paid', payLogs: null });
-                } else {
-                    db.ref('users/'+uId).update({ balance: newBalance });
-                }
-                alert("處理完成");
-            });
+function confirmPayment(uId, logId, amount) {
+    const userRef = db.ref('users/' + uId);
+    
+    userRef.transaction(function(u) {
+        if (!u) return u;
+        
+        // 1. 初始化並扣款
+        u.balance = (u.balance || 0) - amount;
+        
+        // 2. 標記該筆紀錄為已確認
+        if (!u.payLogs) u.payLogs = {};
+        if (u.payLogs[logId]) {
+            u.payLogs[logId].confirmed = true;
+            u.payLogs[logId].time = new Date().toLocaleString();
         }
 
+        // 3. 檢查是否結清
+        if (u.balance <= 0) {
+            if (!u.history) u.history = {};
+            const historyKey = Date.now();
+            
+            u.history[historyKey] = {
+                loanDate: u.loanDate || '未提供',
+                loanAmount: u.loanAmount || 0,
+                loanDays: u.loanDays || 0,
+                deduct: u.deduct || 0,
+                allLogs: u.payLogs, // 儲存所有已確認與未確認的紀錄
+                status: '結清',
+                finishDate: new Date().toLocaleString()
+            };
+            
+            u.status = 'paid';
+            u.balance = 0;
+            u.payLogs = null; // 結清後清空，避免下一次貸款污染
+        }
+        return u; // 回傳更新後的物件給 Firebase
+    }, function(error, committed, snapshot) {
+        if (error) {
+            alert("系統錯誤: " + error);
+        } else if (committed) {
+            alert("入帳確認成功！");
+        }
+    });
+}
         function processBadDebt(id) {
             const amt = document.getElementById('badAmt_'+id).value;
             db.ref('users/'+id).once('value', s => {
