@@ -63,15 +63,11 @@
             db.ref('users').on('value', snap => {
                 const users = snap.val() || {};
                 let html = '', stats = { pending_user:0, verified:0, applying_loan:0, loaning:0, paid:0, bad_debt:0, total:0 };
-                
                 for(let id in users) {
                     const u = users[id];
                     stats.total++;
                     if(stats[u.status] !== undefined) stats[u.status]++;
-
-                    if(u.status === currentView) {
-                        html += renderUserCard(id, u);
-                    }
+                    if(u.status === currentView) html += renderUserCard(id, u);
                 }
                 document.getElementById('userList').innerHTML = html || '<p class="text-gray-500">此分類目前無資料</p>';
                 document.getElementById('s_pending').innerText = stats.pending_user;
@@ -91,22 +87,26 @@
             } else if(u.status === 'verified') {
                 actionHtml = `
                     <div class="p-3 bg-black rounded-xl border border-gray-700 mb-2 text-xs">
-                        <p class="mb-1 text-gray-400">設定顯示額度 (會員登入可見)</p>
                         <input type="number" id="limit_${id}" value="${u.loanAmount || 5000}" class="w-full bg-gray-800 p-2 rounded">
                         <button onclick="updateVal('${id}', 'loanAmount', document.getElementById('limit_${id}').value)" class="mt-2 text-indigo-400">儲存額度</button>
                     </div>`;
             } else if(u.status === 'applying_loan' || u.status === 'loaning') {
                 actionHtml = `
                     <div class="p-3 bg-indigo-900/30 rounded-xl border border-indigo-500 space-y-2">
-                        <p class="text-xs font-bold">貸款/還款 控制台</p>
                         <div class="grid grid-cols-2 gap-2 text-xs">
-                            <select id="amt_${id}" class="bg-black p-1 rounded"><option value="5000">5,000</option><option value="10000">10,000</option><option value="15000">15,000</option><option value="20000">20,000</option><option value="25000">25,000</option><option value="30000">30,000</option></select>
-                            <input type="number" id="days_${id}" placeholder="天數(1-30)" class="bg-black p-1 rounded">
-                            <input type="number" id="deduct_${id}" placeholder="扣除天數" class="bg-black p-1 rounded col-span-2">
+                            <select id="amt_${id}" class="bg-black p-1 rounded"><option value="5000">5,000</option><option value="30000">30,000</option></select>
+                            <input type="number" id="days_${id}" placeholder="天數" class="bg-black p-1 rounded">
+                            <input type="number" id="deduct_${id}" placeholder="扣除" class="bg-black p-1 rounded col-span-2">
                         </div>
-                        <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">撥款/重設貸款</button>
+                        <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">撥款/重設</button>
                     </div>`;
             }
+
+            let badDebtHtml = (u.status === 'bad_debt') ? `
+                <div class="mt-4 p-3 bg-red-900/20 border border-red-600 rounded-xl">
+                    <input type="number" id="badAmt_${id}" placeholder="處理金額" class="w-full bg-black p-2 rounded mb-2">
+                    <button onclick="processBadDebt('${id}')" class="w-full bg-red-600 py-2 rounded font-bold text-xs">處理呆帳並歸檔</button>
+                </div>` : '';
 
             let payLogHtml = '';
             if(u.payLogs) {
@@ -114,95 +114,89 @@
                     if(!log.confirmed) {
                         payLogHtml += `
                         <div class="mt-4 p-3 bg-yellow-900/20 border border-yellow-600 rounded-xl text-xs">
-                            <p>收到繳款: <span class="text-lg font-bold text-yellow-400">${log.amount}</span> 元</p>
-                            <a href="${log.img}" target="_blank" class="text-blue-400 underline">查看水單</a>
-                            <button onclick="confirmPayment('${id}', '${logId}', ${log.amount})" class="w-full mt-2 bg-yellow-600 py-1 rounded font-bold">確認入帳 (扣除餘額)</button>
+                            <p>收到: ${log.amount} 元</p>
+                            <button onclick="confirmPayment('${id}', '${logId}', ${log.amount})" class="w-full mt-2 bg-yellow-600 py-1 rounded font-bold">確認入帳</button>
                         </div>`;
                     }
                 });
             }
 
-            // 歷史編號與顯示連結
             let historyHtml = "";
             if (u.history) {
-                let hKeys = Object.keys(u.history);
-                historyHtml = `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">借款歷史: ${hKeys.map(k => `<button onclick="viewHistory('${id}','${k}')" class="text-indigo-400 underline mx-1">${k}</button>`).join('')}</div>`;
+                historyHtml = `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">歷史紀錄: 
+                ${Object.keys(u.history).map(k => `<button onclick="viewHistory('${id}','${k}')" class="text-indigo-400 underline mx-1">${k}</button>`).join('')}</div>`;
             }
 
             return `
             <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700">
-                <div class="flex justify-between items-start mb-4">
-                    <h2 class="text-xl font-bold">${u.name} ${u.history ? '('+Object.keys(u.history).length+')' : ''}</h2>
-                    <span class="text-xs px-2 py-1 bg-gray-700 rounded">${u.status}</span>
-                </div>
+                <h2 class="text-xl font-bold mb-4">${u.name}</h2>
                 <div class="text-xs text-gray-400 space-y-1 mb-4">
                     <p>身分證: ${id}</p>
-                    <p>手機: ${u.password} <button onclick="editPhone('${id}')" class="text-blue-400 font-bold ml-2 underline">[編輯]</button></p>
-                    ${u.balance !== undefined ? `<p class="text-green-400 font-bold">剩餘應還: ${u.balance}</p><p class="text-indigo-300">每日應繳: ${u.dailyPayment}</p>` : ''}
+                    <p>手機: ${u.password}</p>
+                    ${u.balance !== undefined ? `<p class="text-green-400 font-bold">剩餘: ${u.balance}</p>` : ''}
                 </div>
                 ${actionHtml}
                 ${payLogHtml}
+                ${badDebtHtml}
                 ${historyHtml}
                 <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
             </div>`;
         }
 
-        // 查看歷史詳情
         function viewHistory(id, k) {
-            db.ref('users/'+id+'/history/'+k).once('value', snap => {
-                const h = snap.val();
-                let logs = h.allLogs ? Object.values(h.allLogs).map(l => `${l.time} 入款: ${l.amount}`).join('\n') : "無明細";
-                alert(`第 ${k} 次借款紀錄\n本金: ${h.loanAmount}\n還款明細:\n${logs}`);
+            db.ref('users/'+id+'/history/'+k).once('value', s => {
+                const h = s.val();
+                let msg = `借款日期: ${h.loanDate}\n金額: ${h.loanAmount}\n天數: ${h.loanDays}\n已扣: ${h.deduct || 0}\n`;
+                if(h.allLogs) Object.values(h.allLogs).forEach(l => { msg += `${l.time} 入款: ${l.amount}\n`; });
+                alert(msg + "結清");
             });
-        }
-
-        function editPhone(id) {
-            let newPhone = prompt("請輸入新手機號碼：");
-            if (newPhone) updateVal(id, 'password', newPhone);
-        }
-
-        function approveLoan(id) {
-            const amt = parseInt(document.getElementById('amt_'+id).value);
-            const days = parseInt(document.getElementById('days_'+id).value);
-            const deduct = parseInt(document.getElementById('deduct_'+id).value || 0);
-            const daily = amt / days;
-            db.ref('users/'+id).update({
-                status: 'loaning', loanAmount: amt, loanDays: days, dailyPayment: daily,
-                balance: amt - (daily * deduct), loanDate: new Date().toLocaleDateString()
-            }).then(() => alert("撥款成功"));
         }
 
         function confirmPayment(uId, logId, amount) {
             db.ref('users/'+uId).once('value', s => {
                 const u = s.val();
                 const newBalance = (u.balance || 0) - amount;
-                
-                // 將繳款紀錄存入暫存，供結清時打包
-                db.ref('users/'+uId+'/payLogs/'+logId).update({ confirmed: true });
-
+                db.ref('users/'+uId+'/payLogs/'+logId).update({ confirmed: true, time: new Date().toLocaleString() });
                 if (newBalance <= 0) {
-                    let hRef = db.ref('users/' + uId + '/history');
+                    let hRef = db.ref('users/'+uId+'/history');
                     hRef.once('value', hSnap => {
-                        let count = hSnap.numChildren() + 1;
+                        let count = (hSnap.numChildren() || 0) + 1;
                         hRef.child(count).set({
-                            loanAmount: u.loanAmount,
-                            date: new Date().toLocaleDateString(),
-                            allLogs: u.payLogs // 把結清當下的所有還款紀錄打包存進去
+                            loanDate: u.loanDate, loanAmount: u.loanAmount, loanDays: u.loanDays, 
+                            deduct: document.getElementById('deduct_'+uId) ? document.getElementById('deduct_'+uId).value : 0,
+                            allLogs: u.payLogs
                         });
                     });
-                    db.ref('users/' + uId).update({ balance: 0, status: 'paid', payLogs: null });
+                    db.ref('users/'+uId).update({ balance: 0, status: 'paid', payLogs: null });
                 } else {
-                    db.ref('users/' + uId).update({ balance: newBalance });
+                    db.ref('users/'+uId).update({ balance: newBalance });
                 }
-                alert("已確認入帳");
+                alert("處理完成");
             });
         }
 
-        function updateVal(id, field, val) {
-            let o = {}; o[field] = val;
-            db.ref('users/'+id).update(o).then(() => alert("操作成功"));
+        function processBadDebt(id) {
+            const amt = document.getElementById('badAmt_'+id).value;
+            db.ref('users/'+id).once('value', s => {
+                const u = s.val();
+                db.ref('users/'+id+'/history').push({
+                    loanDate: u.loanDate, loanAmount: u.loanAmount, status: '呆帳處理: ' + amt
+                });
+                db.ref('users/'+id).update({ status: 'paid', balance: 0, payLogs: null });
+            });
         }
 
+        function approveLoan(id) {
+            const amt = parseInt(document.getElementById('amt_'+id).value);
+            const days = parseInt(document.getElementById('days_'+id).value);
+            const deduct = parseInt(document.getElementById('deduct_'+id).value || 0);
+            db.ref('users/'+id).update({
+                status: 'loaning', loanAmount: amt, loanDays: days, dailyPayment: amt/days,
+                balance: amt - ((amt/days) * deduct), loanDate: new Date().toLocaleDateString()
+            }).then(() => alert("撥款成功"));
+        }
+
+        function updateVal(id, field, val) { let o = {}; o[field] = val; db.ref('users/'+id).update(o).then(() => alert("成功")); }
         function deleteUser(id) { if(confirm("確定刪除？")) db.ref('users/'+id).remove(); }
     </script>
 </body>
