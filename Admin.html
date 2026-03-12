@@ -82,13 +82,16 @@
 
         function renderUserCard(id, u) {
             let actionHtml = '';
+            
+            // 狀態分流邏輯
             if(u.status === 'pending_user') {
                 actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
-            } else if(u.status === 'verified' || u.status === 'paid') {
+            } else if(u.status === 'verified') {
                 actionHtml = `
                     <div class="p-3 bg-black rounded-xl border border-gray-700 mb-2 text-xs">
+                        <p class="text-gray-400 mb-1">設定建議額度</p>
                         <input type="number" id="limit_${id}" value="${u.loanAmount || 5000}" class="w-full bg-gray-800 p-2 rounded">
-                        <button onclick="updateVal('${id}', 'loanAmount', document.getElementById('limit_${id}').value)" class="mt-2 text-indigo-400">儲存額度</button>
+                        <button onclick="updateVal('${id}', 'loanAmount', document.getElementById('limit_${id}').value)" class="mt-2 w-full bg-indigo-600 py-1 rounded">儲存額度</button>
                     </div>`;
             } else if(u.status === 'applying_loan' || u.status === 'loaning') {
                 actionHtml = `
@@ -100,12 +103,16 @@
                         </div>
                         <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">撥款/重設</button>
                     </div>`;
+            } else if(u.status === 'paid') {
+                actionHtml = `
+                    <button onclick="updateVal('${id}', 'status', 'applying_loan')" class="w-full bg-blue-600 py-2 rounded-xl font-bold mb-2">重新發起貸款</button>
+                `;
             }
 
-            let badDebtHtml = (u.status === 'bad_debt') ? `
+            let badDebtHtml = (u.status === 'bad_debt' || u.status === 'paid') ? `
                 <div class="mt-4 p-3 bg-red-900/20 border border-red-600 rounded-xl">
                     <input type="number" id="badAmt_${id}" placeholder="處理金額" class="w-full bg-black p-2 rounded mb-2">
-                    <button onclick="processBadDebt('${id}')" class="w-full bg-red-600 py-2 rounded font-bold text-xs">處理呆帳並歸檔</button>
+                    <button onclick="processBadDebt('${id}')" class="w-full bg-red-600 py-2 rounded font-bold text-xs">標記/處理呆帳</button>
                 </div>` : '';
 
             let payLogHtml = '';
