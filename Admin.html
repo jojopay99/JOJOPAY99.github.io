@@ -177,9 +177,8 @@ function renderUserCard(id, u) {
         });
         historyHtml += `</div>`;
     }
-
-    return `... /* 其餘卡片結構 */ ${actionHtml} ${historyHtml} ...`;
 }
+return `
     <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 w-full md:w-80">
         <h2 class="text-xl font-bold mb-4">${u.name}</h2>
         <div class="text-xs text-gray-400 space-y-1 mb-4">
@@ -194,7 +193,7 @@ function renderUserCard(id, u) {
         <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
     </div>`;
 }
-// 1. 記錄還款 (不自動變更狀態)
+        
 function confirmPayment(uId, amount) {
     if (!amount || isNaN(amount)) return;
     const userRef = db.ref('users/' + uId);
