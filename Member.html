@@ -129,7 +129,16 @@
             };
             r.readAsDataURL(input.files[0]);
         }
-
+function submitPayment(uId, amount, details) {
+    db.ref('payment_requests').push({
+        userId: uId,
+        amount: amount,
+        details: details,
+        status: 'pending', // 狀態為待審核
+        timestamp: new Date().toLocaleString()
+    });
+    alert("還款明細已送出，等待管理員確認。");
+}
         function submitBadDebtPay() {
             const amt = document.getElementById('badPayAmt').value;
             if(!amt || !tempFileBase64) return alert("請完整填寫金額並上傳照片");
