@@ -202,14 +202,12 @@ function confirmPayment(uId, logId, amount) {
             // 入帳小於應繳，減少當期應繳
             u.currentDue -= amount;
         }
-        
         // 3. 標記紀錄
         if (!u.payLogs) u.payLogs = {};
         if (u.payLogs[logId]) {
             u.payLogs[logId].confirmed = true;
             u.payLogs[logId].time = new Date().toLocaleString();
         }
-
         // 4. 結清檢查
         if (u.balance <= 0) {
             u.status = 'paid';
@@ -222,7 +220,6 @@ function confirmPayment(uId, logId, amount) {
         if (committed) alert("入帳確認成功！");
     });
 }
-
 function approveLoan(id) {
     const amt = parseInt(document.getElementById('amt_'+id).value) || 0;
     const days = parseInt(document.getElementById('days_'+id).value) || 1;
@@ -298,13 +295,15 @@ function processBadDebt(id) {
    // ... 其他程式碼 ...
 function deleteUser(id) { if(confirm("確定刪除？")) db.ref('users/'+id).remove(); }
 
-// 確保這段監聽器在 script 標籤內
-document.addEventListener('click', function(e) {
-    if (e.target && e.target.classList.contains('history-btn')) {
-        const uId = e.target.getAttribute('data-id');
-        const hId = e.target.getAttribute('data-hid');
-        viewHistory(uId, hId);
-    }
+// 確保渲染後的按鈕都能被點到 (事件代理)
+document.getElementById('userList').addEventListener('click', function(e) {
+    // 檢查是否點擊到歷史按鈕
+    if (e.target.classList.contains('history-btn')) {
+        const uId = e.target.getAttribute('data-id');
+        const hId = e.target.getAttribute('data-hid');
+        console.log("點擊了歷史:", uId, hId); // 查看控制台確認點擊
+        viewHistory(uId, hId);
+    }
 });
       // 手動更改狀態
 // 確保你的 updateStatus 函式長這樣，才不會變成只有狀態變，餘額沒變
@@ -330,5 +329,13 @@ function processBadDebt(id) {
       .then(() => alert("呆帳金額已記錄"));
 }
 </script>
+<div id="historyModal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-600 max-w-sm w-full mx-4">
+        <h3 class="text-xl font-bold mb-4 text-indigo-400">歷史紀錄詳情</h3>
+        <div id="modalContent" class="text-sm text-gray-300 space-y-2 mb-6"></div>
+        <button onclick="document.getElementById('historyModal').classList.add('hidden')" 
+                class="w-full bg-gray-600 py-2 rounded-xl font-bold">關閉</button>
+    </div>
+</div>
 </body>
 </html>
