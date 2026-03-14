@@ -117,16 +117,16 @@ function renderUserCard(id, u) {
                 <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">撥款</button>
             </div>`;
     } 
-    else if (status === 'loaning') {
-        actionHtml = `
-            <div class="p-3 bg-indigo-900/30 rounded-xl border border-indigo-500 space-y-2">
-                <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">更新貸款資訊</button>
-                <div class="flex gap-2 mt-2">
-                    <button onclick="updateStatus('${id}', 'paid')" class="flex-1 bg-green-700 py-1 rounded text-xs font-bold">標記已結清</button>
-                    <button onclick="updateStatus('${id}', 'bad_debt')" class="flex-1 bg-red-700 py-1 rounded text-xs font-bold">標記為呆帳</button>
-                </div>
-            </div>`;
-    } 
+        else if (status === 'loaning') {
+    actionHtml = `
+        <div class="p-3 bg-indigo-900/30 rounded-xl border border-indigo-500 space-y-2">
+            <button onclick="confirmPayment('${id}', prompt('請輸入還款金額'))" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">記錄還款</button>
+            <div class="flex gap-2 mt-2">
+                <button onclick="manualSettle('${id}')" class="flex-1 bg-green-700 py-1 rounded text-xs font-bold">手動結清</button>
+                <button onclick="updateStatus('${id}', 'bad_debt')" class="flex-1 bg-red-700 py-1 rounded text-xs font-bold">標記呆帳</button>
+            </div>
+        </div>`;
+}
     else if (status === 'paid') {
         actionHtml = `<button onclick="updateVal('${id}', 'status', 'applying_loan')" class="w-full bg-blue-600 py-2 rounded-xl font-bold mb-2">重新發起貸款</button>`;
     }
@@ -157,16 +157,17 @@ function renderUserCard(id, u) {
 
     // 3. 歷史紀錄與刪除
     let historyHtml = '';
-    if (u.history) {
+    if (u.payLogs) {
         historyHtml = `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">
-            <p class="mb-1 text-gray-500">歷史紀錄：</p>
-            <div class="flex flex-wrap gap-2">`;
-        Object.keys(u.history).forEach(k => {
-            historyHtml += `<button data-id="${id}" data-hid="${k}" class="history-btn bg-gray-700 hover:bg-indigo-500 px-2 py-1 rounded text-indigo-300 transition-colors">${k}</button>`;
+            <p class="mb-1 text-gray-500">還款紀錄：</p>`;
+        Object.keys(u.payLogs).forEach(k => {
+            historyHtml += `<p>${u.payLogs[k].time}: $${u.payLogs[k].amount} (餘: ${u.payLogs[k].balanceAfter})</p>`;
         });
-        historyHtml += `</div></div>`;
+        historyHtml += `</div>`;
     }
 
+    return `... /* 其餘卡片結構 */ ${actionHtml} ${historyHtml} ...`;
+}
     // 4. 最終回傳 HTML
     return `
     <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 w-full md:w-80">
@@ -183,43 +184,39 @@ function renderUserCard(id, u) {
         <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
     </div>`;
 }
-function confirmPayment(uId, logId, amount) {
+// 1. 記錄還款 (不自動變更狀態)
+function confirmPayment(uId, amount) {
+    if (!amount || isNaN(amount)) return;
     const userRef = db.ref('users/' + uId);
-    console.log("嘗試確認繳款，用戶:", uId, "金額:", amount); // 這裡不用 u，改用傳入的參數
-
+    
     userRef.once('value').then(snap => {
         let u = snap.val();
-        if (!u) {
-            console.error("找不到該用戶資料");
-            return;
-        }
-        console.log("成功讀取用戶資料:", u); // 這裡再印出 u
-
-        let balance = parseInt(u.balance) || 0;
-        let currentDue = parseInt(u.currentDue) || 0;
-        let payment = parseInt(amount) || 0;
-
-        let newBalance = balance - payment;
-        let newCurrentDue = currentDue - payment;
-
-        let updates = {
-            balance: Math.max(0, newBalance),
-            currentDue: Math.max(0, newCurrentDue),
-            status: (newBalance <= 0) ? 'paid' : 'loaning'
-        };
-
-        userRef.update(updates).then(() => {
-            db.ref(`users/${uId}/payLogs/${logId}`).update({
-                confirmed: true,
+        let newBalance = (parseInt(u.balance) || 0) - parseInt(amount);
+        
+        userRef.update({ balance: newBalance }).then(() => {
+            db.ref(`users/${uId}/payLogs`).push({
+                amount: parseInt(amount),
+                balanceAfter: newBalance,
                 time: new Date().toLocaleString()
             }).then(() => {
-                alert("入帳確認成功！");
-                loadData(); // 強制重新整理介面以顯示最新狀態
+                alert("還款記錄成功！");
+                loadData();
             });
         });
-    }).catch(err => {
-        console.error("更新失敗:", err);
-        alert("操作失敗，錯誤代碼: " + err.message);
+    });
+}
+function manualSettle(uId) {
+    if (!confirm("確定要將此用戶標記為『已結清』嗎？")) return;
+
+    db.ref('users/' + uId).update({
+        status: 'paid',
+        balance: 0,
+        currentDue: 0,
+        settledDate: new Date().toLocaleString()
+    }).then(() => {
+        alert("用戶已成功結清");
+        currentView = 'paid'; // 跳轉至已還款頁面
+        loadData();
     });
 }
 function approveLoan(id) {
