@@ -212,7 +212,6 @@ function renderUserCard(id, u) {
             查看還款詳情 (${logCount} 筆紀錄)
         </button>`;
         }
-}
    // 3. 歷史紀錄：改為彈出式按鈕 (取代原本的迴圈顯示)
     let historyHtml = '';
     if (u.payLogs) {
@@ -223,7 +222,7 @@ function renderUserCard(id, u) {
             查看還款詳情 (${logCount} 筆紀錄)
         </button>`;
         }
-        
+        }
 function confirmPayment(uId, amount) {
     if (!amount || isNaN(amount)) return;
     const userRef = db.ref('users/' + uId);
