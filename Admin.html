@@ -147,7 +147,7 @@ function renderUserCard(id, u) {
     
     console.log("正在渲染會員:", u.name, "狀態為:", status);
     
-    // 1. 狀態分流邏輯 - 確保 HTML 結構完整閉合
+    // 1. 狀態分流邏輯
     if (status === 'pending_user') {
         actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
     } 
@@ -202,7 +202,8 @@ function renderUserCard(id, u) {
             </div>
             <p class="text-[10px] text-gray-500 mt-1 text-right">還款進度: ${progress}%</p>`;
     }
-    // 3. 歷史紀錄：改為彈出式按鈕 (取代原本的迴圈顯示)
+
+    // 3. 歷史紀錄按鈕
     let historyHtml = '';
     if (u.payLogs) {
         const logCount = Object.keys(u.payLogs).length;
@@ -211,18 +212,18 @@ function renderUserCard(id, u) {
                 class="w-full mt-3 py-2 border border-gray-600 rounded-xl text-xs text-gray-300 hover:bg-gray-700 transition">
             查看還款詳情 (${logCount} 筆紀錄)
         </button>`;
-        }
-   // 3. 歷史紀錄：改為彈出式按鈕 (取代原本的迴圈顯示)
-    let historyHtml = '';
-    if (u.payLogs) {
-        const logCount = Object.keys(u.payLogs).length;
-        historyHtml = `
-        <button onclick="openHistoryModal('${id}')" 
-                class="w-full mt-3 py-2 border border-gray-600 rounded-xl text-xs text-gray-300 hover:bg-gray-700 transition">
-            查看還款詳情 (${logCount} 筆紀錄)
-        </button>`;
-        }
-        }
+    }
+
+    // 最後組合並回傳 HTML
+    return `
+    <div class="bg-gray-800 p-4 rounded-3xl border border-gray-600 w-full md:w-64">
+        <h2 class="text-xl font-bold mb-1">${u.name || '未知會員'}</h2>
+        <p class="text-xs text-gray-400 mb-4">ID: ${id}</p>
+        ${actionHtml}
+        ${progressHtml}
+        ${historyHtml}
+    </div>`;
+}
 function confirmPayment(uId, amount) {
     if (!amount || isNaN(amount)) return;
     const userRef = db.ref('users/' + uId);
