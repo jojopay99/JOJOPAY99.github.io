@@ -15,7 +15,7 @@
         <div id="mainUI" class="space-y-6">
             <div class="bg-black/50 p-4 rounded-2xl border border-gray-800">
                 <p class="text-xs text-gray-500 uppercase tracking-widest">目前帳戶狀態</p>
-                <p id="uStatus" class="text-yellow-400 font-bold mt-1">讀取中...</p>
+                <p id="uStatus" class="font-bold mt-1">讀取中...</p>
             </div>
 
             <div class="py-6">
@@ -24,22 +24,10 @@
                 <p id="dailyTip" class="text-xs text-indigo-300 mt-4 hidden">請記得繳款，今日應繳：<span id="uDaily">0</span> 元</p>
             </div>
 
-            <div id="payPanel" class="hidden bg-[#1a1a2e] p-5 rounded-2xl border border-indigo-900/50 text-left">
-                <h3 class="font-bold text-sm mb-4 text-indigo-300">快速還款匯報</h3>
-                <input type="number" id="payAmt" placeholder="請輸入已繳金額" class="w-full bg-black p-3 rounded-xl border border-gray-700 mb-3 text-white">
-                <button onclick="document.getElementById('payFile').click()" id="payBtnText" class="w-full bg-gray-800 py-3 rounded-xl text-sm mb-3 border border-dashed border-gray-500">上傳繳款明細 (照片)</button>
-                <input type="file" id="payFile" class="hidden" onchange="handlePayImg(this)">
-                <button onclick="submitPayment()" class="w-full bg-indigo-600 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20">送出審核</button>
-            </div>
+            <div id="actionArea" class="space-y-4"></div>
             
-            <div id="actionBtns" class="space-y-3">
-                <button onclick="applyLoan()" id="btnLoan" class="w-full bg-indigo-600 py-3 rounded-xl font-bold">申請貸款 / 簽署合約</button>
-                <button onclick="document.getElementById('addImg').click()" class="w-full bg-gray-800 py-3 rounded-xl text-sm">補充加分照片</button>
-                <input type="file" id="addImg" class="hidden" onchange="uploadExtra(this)">
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <a href="https://line.me/R/ti/p/your_line_id" class="bg-gray-900 py-3 rounded-xl text-xs border border-gray-800">聯繫客服</a>
+            <div class="grid grid-cols-2 gap-4 pt-4">
+                <a href="https://line.me/R/ti/p/your_line_id" class="bg-gray-900 py-3 rounded-xl text-xs border border-gray-800 flex items-center justify-center">聯繫客服</a>
                 <button onclick="logout()" class="bg-gray-900 py-3 rounded-xl text-xs border border-gray-800 text-red-400">登出</button>
             </div>
         </div>
@@ -48,93 +36,132 @@
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
         const uId = localStorage.getItem('uId');
-        let payImgBase64 = '';
+        let tempFileBase64 = ''; // 用於存放上傳的照片
         
         if(!uId) window.location.href = "Login.html";
 
         db.ref('users/'+uId).on('value', s => {
-    const u = s.val();
-    if(!u) return;
+            const u = s.val();
+            if(!u) return;
 
-    document.getElementById('userName').innerText = u.name + " 您好";
-    
-    const st = u.status;
-    const statusMap = {
-        'pending_user': '待審核 (請稍後)',
-        'verified': '正式會員 (可申請貸款)',
-        'applying_loan': '貸款審核中',
-        'loaning': '貸款中 (還款中)',
-        'paid': '已結清',
-        'bad_debt': '帳務異常'
-    };
-    document.getElementById('uStatus').innerText = statusMap[st] || st;
+            document.getElementById('userName').innerText = u.name + " 您好";
+            const st = u.status;
+            
+            // 1. 處理狀態顯示與額度
+            const statusTarget = document.getElementById('uStatus');
+            const limitTarget = document.getElementById('uLimit');
+            const dailyTip = document.getElementById('dailyTip');
+            
+            if (st === 'bad_debt') {
+                statusTarget.innerHTML = '<span class="text-red-500 animate-pulse">帳務異常</span>';
+                limitTarget.innerText = '0'; // 異常則額度歸 0
+                dailyTip.classList.add('hidden');
+            } else if (st === 'loaning') {
+                statusTarget.className = "text-yellow-400 font-bold mt-1";
+                statusTarget.innerText = "貸款中 (還款中)";
+                limitTarget.innerText = Math.floor(u.balance || 0);
+                document.getElementById('limitTitle').innerText = '剩餘應還總額';
+                dailyTip.classList.remove('hidden');
+                document.getElementById('uDaily').innerText = Math.floor(u.dailyPayment || 0);
+            } else {
+                statusTarget.className = "text-green-400 font-bold mt-1";
+                const statusMap = { 'pending_user': '待審核', 'verified': '正式會員', 'paid': '已結清', 'applying_loan': '貸款審核中' };
+                statusTarget.innerText = statusMap[st] || st;
+                limitTarget.innerText = u.loanAmount || 0;
+                document.getElementById('limitTitle').innerText = '可用額度';
+                dailyTip.classList.add('hidden');
+            }
 
-    // 統一進行顯示邏輯判斷
-    if(st === 'loaning') {
-        // 還款中狀態
-        document.getElementById('limitTitle').innerText = '剩餘應還總額';
-        document.getElementById('uLimit').innerText = Math.floor(u.balance || 0);
-        document.getElementById('dailyTip').classList.remove('hidden');
-        document.getElementById('uDaily').innerText = Math.floor(u.dailyPayment || 0);
-        document.getElementById('payPanel').classList.remove('hidden');
-        document.getElementById('btnLoan').style.display = 'none';
-    } else {
-        // 非還款狀態 (可申請時)
-        document.getElementById('limitTitle').innerText = '可用額度';
-        document.getElementById('uLimit').innerText = u.loanAmount || 0;
-        document.getElementById('dailyTip').classList.add('hidden');
-        document.getElementById('payPanel').classList.add('hidden');
-        
-        // 核心修正：檢查是否為正式會員或已結清，如果是則顯示按鈕
-        if (st === 'verified' || st === 'paid') {
-            document.getElementById('btnLoan').style.display = 'block';
-            document.getElementById('btnLoan').innerText = (st === 'paid') ? '再次申請貸款' : '申請貸款 / 簽署合約';
-        } else {
-            document.getElementById('btnLoan').style.display = 'none';
-        }
-    }
-});
+            // 2. 動態渲染操作區塊 (Action Area)
+            let actionHtml = '';
+            
+            if (st === 'bad_debt') {
+                // 帳務異常：顯示法律警語 + 還款輸入
+                actionHtml = `
+                    <div class="p-5 bg-red-900/20 border border-red-600 rounded-2xl text-left">
+                        <p class="text-red-500 font-bold text-sm mb-2">⚠️ 法律警告</p>
+                        <p class="text-gray-300 text-xs leading-relaxed mb-4">
+                            您的帳款尚未正常結清，請盡快結清，以免觸犯相關法律。若已結清依然顯示此狀態，請盡快聯繫客服人員協助。
+                        </p>
+                        <div class="space-y-3 pt-3 border-t border-red-900/50">
+                            <input type="number" id="badPayAmt" placeholder="輸入還款金額" class="w-full bg-black p-3 rounded-xl border border-gray-700 text-sm">
+                            <button onclick="document.getElementById('badFile').click()" id="badFileBtn" class="w-full bg-gray-800 py-2 rounded-xl text-xs border border-dashed border-gray-500">上傳還款明細照片</button>
+                            <input type="file" id="badFile" class="hidden" onchange="handleImg(this, 'badFileBtn')">
+                            <button onclick="submitBadDebtPay()" class="w-full bg-red-600 py-3 rounded-xl font-bold text-sm">提交還款核對</button>
+                        </div>
+                    </div>`;
+            } else if (st === 'loaning') {
+                // 貸款中：顯示還款面版
+                actionHtml = `
+                    <div class="bg-[#1a1a2e] p-5 rounded-2xl border border-indigo-900/50 text-left">
+                        <h3 class="font-bold text-sm mb-4 text-indigo-300">快速還款匯報</h3>
+                        <input type="number" id="payAmt" placeholder="請輸入已繳金額" class="w-full bg-black p-3 rounded-xl border border-gray-700 mb-3 text-white">
+                        <button onclick="document.getElementById('payFile').click()" id="payFileBtn" class="w-full bg-gray-800 py-3 rounded-xl text-sm mb-3 border border-dashed border-gray-500">上傳繳款明細 (照片)</button>
+                        <input type="file" id="payFile" class="hidden" onchange="handleImg(this, 'payFileBtn')">
+                        <button onclick="submitNormalPay()" class="w-full bg-indigo-600 py-3 rounded-xl font-bold">送出審核</button>
+                    </div>`;
+            } else if (st === 'verified' || st === 'paid') {
+                // 可申請狀態
+                actionHtml = `
+                    <button onclick="applyLoan()" class="w-full bg-indigo-600 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20">
+                        ${st === 'paid' ? '再次申請貸款' : '申請貸款 / 簽署合約'}
+                    </button>
+                    <button onclick="document.getElementById('addImg').click()" class="w-full bg-gray-800 py-3 rounded-xl text-sm">補充加分照片</button>
+                    <input type="file" id="addImg" class="hidden" onchange="uploadExtra(this)">`;
+            } else {
+                actionHtml = `<p class="text-gray-500 text-sm py-4">目前暫無可執行的操作</p>`;
+            }
 
-       function applyLoan() {
-    // 申請後將狀態改為 applying_loan，後台便能收到請求
-    db.ref('users/'+uId).update({ 
-        status: 'applying_loan',
-        loanDate: new Date().toLocaleDateString() // 記錄申請時間
-    })
-    .then(() => alert("貸款申請已送出，請靜候後台撥款"));
-}
+            document.getElementById('actionArea').innerHTML = actionHtml;
+        });
 
-        function handlePayImg(input) {
+        // 圖片處理 (通用)
+        function handleImg(input, btnId) {
             const r = new FileReader();
             r.onload = e => { 
-                payImgBase64 = e.target.result;
-                document.getElementById('payBtnText').innerText = "✅ 照片已就緒";
-                document.getElementById('payBtnText').classList.add('text-green-400');
+                tempFileBase64 = e.target.result;
+                document.getElementById(btnId).innerText = "✅ 照片已就緒";
+                document.getElementById(btnId).classList.add('text-green-400');
             };
             r.readAsDataURL(input.files[0]);
         }
 
-        function submitPayment() {
+        // 提交還款 (呆帳)
+        function submitBadDebtPay() {
+            const amt = document.getElementById('badPayAmt').value;
+            if(!amt || !tempFileBase64) return alert("請完整填寫金額並上傳照片");
+            pushPayLog(amt, tempFileBase64, "呆帳還款審核中");
+        }
+
+        // 提交還款 (正常)
+        function submitNormalPay() {
             const amt = document.getElementById('payAmt').value;
-            if(!amt || !payImgBase64) return alert("請填寫金額並上傳照片");
-            
+            if(!amt || !tempFileBase64) return alert("請完整填寫金額並上傳照片");
+            pushPayLog(amt, tempFileBase64, "還款匯報已送出");
+        }
+
+        // 寫入資料庫 (通用)
+        function pushPayLog(amt, img, msg) {
             db.ref('users/'+uId+'/payLogs').push({
                 amount: parseInt(amt),
-                img: payImgBase64,
+                img: img,
                 time: new Date().toLocaleString(),
                 confirmed: false
             }).then(() => {
-                alert("還款匯報已送出！管理員確認後會扣除您的餘額。");
-                document.getElementById('payAmt').value = '';
-                payImgBase64 = '';
-                document.getElementById('payBtnText').innerText = "上傳繳款明細 (照片)";
+                alert(msg);
+                tempFileBase64 = '';
             });
+        }
+
+        function applyLoan() {
+            db.ref('users/'+uId).update({ status: 'applying_loan', loanDate: new Date().toLocaleDateString() })
+              .then(() => alert("貸款申請已送出"));
         }
 
         function uploadExtra(input) {
             const r = new FileReader();
             r.onload = e => {
-                db.ref('users/'+uId+'/imgs/extra').set(e.target.result).then(() => alert("已送出加分補充"));
+                db.ref('users/'+uId+'/imgs/extra').set(e.target.result).then(() => alert("已送出補充照片"));
             };
             r.readAsDataURL(input.files[0]);
         }
