@@ -202,7 +202,7 @@ function renderUserCard(id, u) {
             </div>
             <p class="text-[10px] text-gray-500 mt-1 text-right">還款進度: ${progress}%</p>`;
     }
-
+}
    // 3. 歷史紀錄：改為彈出式按鈕 (取代原本的迴圈顯示)
     let historyHtml = '';
     if (u.payLogs) {
@@ -213,6 +213,7 @@ function renderUserCard(id, u) {
             查看還款詳情 (${logCount} 筆紀錄)
         </button>`;
     }
+        }
 function confirmPayment(uId, amount) {
     if (!amount || isNaN(amount)) return;
     const userRef = db.ref('users/' + uId);
@@ -271,17 +272,6 @@ function approveLoan(id) {
         balance: amt - deduct,
         loanDate: new Date().toLocaleDateString()
     }).then(() => alert("撥款成功"));
-}
-function processBadDebt(id) {
-    const amt = parseInt(document.getElementById('badAmt_'+id).value) || 0;
-    if(amt === 0) return alert("請輸入處理金額");
-    
-    // 將呆帳處理紀錄寫入資料庫
-    db.ref('users/' + id).update({
-        status: 'bad_debt',
-        balance: 0, // 結清處理
-        currentDue: 0
-    }).then(() => alert("呆帳已處理"));
 }
       function filterUsers() {
     const input = document.getElementById('searchInput').value.toLowerCase();
