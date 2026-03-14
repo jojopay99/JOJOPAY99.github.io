@@ -9,9 +9,10 @@
 </head>
 <body class="bg-gray-900 text-white p-8">
     <div id="loginBox" class="max-w-xs mx-auto mt-20 p-8 bg-gray-800 rounded-3xl border border-gray-700">
-        <h2 class="text-xl font-bold mb-6 text-center">管理後台登入</h2>
-        <input type="password" id="admP" placeholder="管理密碼" class="w-full p-3 mb-4 bg-black rounded-xl border border-gray-600 text-center text-white">
-        <button onclick="checkAdmin()" class="w-full bg-blue-600 py-3 rounded-xl font-bold">進入後台</button>
+       <h2 class="text-xl font-bold mb-6 text-center">JOJOPAY</h2>
+        <h2 class="text-xl font-bold mb-6 text-center">管理後台登入</h2>
+        <input type="password" id="admP" placeholder="PASSWORD" class="w-full p-3 mb-4 bg-black rounded-xl border border-gray-600 text-center text-white">
+        <button onclick="checkAdmin()" class="w-full bg-blue-600 py-3 rounded-xl font-bold">登入</button>
     </div>
 
     <div id="adminPanel" style="display:none;" class="max-w-7xl mx-auto">
@@ -54,13 +55,24 @@
         let currentView = '';
 
         function checkAdmin() {
-            if(document.getElementById('admP').value === '0895') {
-                document.getElementById('loginBox').style.display = 'none';
-                document.getElementById('adminPanel').style.display = 'block';
-                loadData();
-            } else { alert("密碼錯誤"); }
-        }
-
+    const passwordInput = document.getElementById('admP').value;
+    console.log("嘗試登入..."); // 測試按鈕是否真的有被觸發
+    
+    if(passwordInput === '9595') {
+        console.log("密碼正確，準備進入後台");
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        
+        // 確保 loadData 有被呼叫
+        if (typeof loadData === 'function') {
+            loadData();
+        } else {
+            console.error("錯誤：找不到 loadData 函式");
+        }
+    } else { 
+        alert("密碼錯誤，請重新輸入"); 
+    }
+}
         function setView(v) { currentView = v; loadData(); }
 
         function loadData() {
