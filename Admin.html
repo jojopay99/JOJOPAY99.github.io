@@ -184,41 +184,43 @@ function renderUserCard(id, u) {
     </div>`;
 }
 function confirmPayment(uId, logId, amount) {
-    const userRef = db.ref('users/' + uId);
-    
-    userRef.transaction(function(u) {
-        if (!u) return u;
-        
-        // 1. 扣除總餘額
-        u.balance -= amount;
-        
-        // 2. 處理當期應繳與滾動邏輯
-        if (amount >= u.currentDue) {
-            // 入帳大於或等於應繳，將差額補到下一期（重新計算剩餘的應繳）
-            // 這裡假設每一期應繳固定為 initialCurrentDue，若無則用原本的計算
-            let diff = amount - u.currentDue;
-            u.currentDue = Math.round(u.loanAmount / u.loanDays) - diff; 
-        } else {
-            // 入帳小於應繳，減少當期應繳
-            u.currentDue -= amount;
-        }
-        // 3. 標記紀錄
-        if (!u.payLogs) u.payLogs = {};
-        if (u.payLogs[logId]) {
-            u.payLogs[logId].confirmed = true;
-            u.payLogs[logId].time = new Date().toLocaleString();
-        }
-        // 4. 結清檢查
-        if (u.balance <= 0) {
-            u.status = 'paid';
-            u.balance = 0;
-            u.currentDue = 0;
-            // 存入歷史紀錄 (省略部分細節)
-        }
-        return u;
-    }, function(error, committed) {
-        if (committed) alert("入帳確認成功！");
-    });
+    const userRef = db.ref('users/' + uId);
+    console.log("嘗試確認繳款，用戶:", uId, "金額:", amount); // 這裡不用 u，改用傳入的參數
+
+    userRef.once('value').then(snap => {
+        let u = snap.val();
+        if (!u) {
+            console.error("找不到該用戶資料");
+            return;
+        }
+        console.log("成功讀取用戶資料:", u); // 這裡再印出 u
+
+        let balance = parseInt(u.balance) || 0;
+        let currentDue = parseInt(u.currentDue) || 0;
+        let payment = parseInt(amount) || 0;
+
+        let newBalance = balance - payment;
+        let newCurrentDue = currentDue - payment;
+
+        let updates = {
+            balance: Math.max(0, newBalance),
+            currentDue: Math.max(0, newCurrentDue),
+            status: (newBalance <= 0) ? 'paid' : 'loaning'
+        };
+
+        userRef.update(updates).then(() => {
+            db.ref(`users/${uId}/payLogs/${logId}`).update({
+                confirmed: true,
+                time: new Date().toLocaleString()
+            }).then(() => {
+                alert("入帳確認成功！");
+                loadData(); // 強制重新整理介面以顯示最新狀態
+            });
+        });
+    }).catch(err => {
+        console.error("更新失敗:", err);
+        alert("操作失敗，錯誤代碼: " + err.message);
+    });
 }
 function approveLoan(id) {
     const amt = parseInt(document.getElementById('amt_'+id).value) || 0;
