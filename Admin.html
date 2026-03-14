@@ -144,11 +144,10 @@ function approvePayment(reqKey, uId, amount) {
 function renderUserCard(id, u) {
     const status = u.status || 'unknown'; 
     let actionHtml = '';
-    let badDebtHtml = '';
     
     console.log("正在渲染會員:", u.name, "狀態為:", status);
     
-    // 1. 狀態分流邏輯
+    // 1. 狀態分流邏輯 - 確保 HTML 結構完整閉合
     if (status === 'pending_user') {
         actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
     } 
@@ -187,13 +186,8 @@ function renderUserCard(id, u) {
     else if (status === 'bad_debt') {
         actionHtml = `
             <div class="mt-4 p-3 bg-red-900/20 border border-red-600 rounded-xl space-y-3">
-                <div>
-                    <p class="text-[10px] text-gray-400 mb-1">修改尚欠金額</p>
-                    <div class="flex gap-2">
-                        <input type="number" id="bal_${id}" value="${u.balance || 0}" class="flex-1 bg-black p-2 rounded text-xs text-white">
-                        <button onclick="updateVal('${id}', 'balance', parseInt(document.getElementById('bal_${id}').value))" class="bg-gray-700 px-3 rounded text-xs hover:bg-gray-600">修正</button>
-                    </div>
-                </div>
+                <input type="number" id="badAmt_${id}" placeholder="輸入呆帳處理金額" class="w-full bg-black p-2 rounded text-xs text-white">
+                <button onclick="processBadDebt('${id}')" class="w-full bg-red-700 py-2 rounded font-bold text-xs hover:bg-red-600">記錄處理金額</button>
                 <button onclick="updateStatus('${id}', 'paid')" class="w-full bg-green-700 py-2 rounded font-bold text-xs hover:bg-green-600">一鍵標記為：已正常結清</button>
             </div>`;
     }
@@ -220,7 +214,7 @@ function renderUserCard(id, u) {
         historyHtml += `</div>`;
     }
 
-    // 回傳 HTML (請注意，return 必須在函式大括號內)
+    // 4. 回傳最終 HTML，確保結構整齊
     return `
     <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 w-full md:w-80">
         <h2 class="text-xl font-bold mb-4">${u.name}</h2>
@@ -231,7 +225,6 @@ function renderUserCard(id, u) {
             ${progressHtml}
         </div>
         ${actionHtml}
-        ${badDebtHtml}
         ${historyHtml}
         <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
     </div>`;
