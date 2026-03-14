@@ -251,12 +251,7 @@ function confirmPayment(uId, amount) {
                 time: new Date().toLocaleString()
             }).then(() => {
                 alert("還款記錄成功！");
-                loadData();
-                // 在 Admin.html 中監聽
-    // 將這些 request 渲染到一個 id 為 'paymentList' 的 div 中
-    // 每個項目都要有一個「確認按鈕」，按下去後執行：
-    // 1. 更新 user 的 balance
-    // 2. 將 payment_requests 的 status 改為 'confirmed'
+                loadData(); 
             });
         });
     });
@@ -312,19 +307,20 @@ function processBadDebt(id) {
     }).then(() => alert("呆帳已處理"));
 }
       function filterUsers() {
-    const input = document.getElementById('searchInput').value.toLowerCase();
-    const cards = document.getElementById('userList').getElementsByClassName('bg-gray-800');
-    
-    for (let i = 0; i < cards.length; i++) {
-        const name = cards[i].querySelector('h2').innerText.toLowerCase();
-        const id = cards[i].querySelector('.text-xs p').innerText.toLowerCase();
-        
-        if (name.indexOf(input) > -1 || id.indexOf(input) > -1) {
-            cards[i].style.display = "";
-        } else {
-            cards[i].style.display = "none";
-        }
-    }
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.getElementById('userList').getElementsByClassName('bg-gray-800');
+    
+    for (let i = 0; i < cards.length; i++) {
+        const nameEl = cards[i].querySelector('h2');
+        const idEl = cards[i].querySelector('.text-xs p');
+        
+        // 增加檢查，確保元素存在才執行，避免報錯
+        if (nameEl && idEl) {
+            const name = nameEl.innerText.toLowerCase();
+            const id = idEl.innerText.toLowerCase();
+            cards[i].style.display = (name.includes(input) || id.includes(input)) ? "" : "none";
+        }
+    }
 }
       function viewHistory(uId, hId) {
     db.ref(`users/${uId}/history/${hId}`).once('value', snap => {
