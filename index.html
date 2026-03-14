@@ -6,27 +6,31 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <style>body { background: #0a0a0f; color: white; }</style>
+    <style>
+        body { background: #0a0a0f; color: white; }
+        /* 額外增加自定義字重讓視覺更硬派 */
+        .brand-heavy { font-weight: 900; }
+    </style>
 </head>
 <body>
     <nav class="p-6 flex justify-between items-center border-b border-gray-800">
         <div class="w-24"></div> 
-        <h1 class="text-3xl font-bold text-indigo-400">JOJOPAY</h1>
-        <a id="authBtn" href="javascript:void(0)" onclick="handleNav()" class="bg-indigo-600 px-5 py-2 rounded-full text-sm font-bold">會員中心</a>
+        <h1 class="text-4xl brand-heavy text-indigo-500 tracking-tighter drop-shadow-[0_0_8px_rgba(99,102,241,0.4)]">JOJOPAY</h1>
+        <a id="authBtn" href="javascript:void(0)" onclick="handleNav()" class="bg-indigo-600 px-5 py-2 rounded-full text-sm font-bold hover:bg-indigo-500 transition-all">會員中心</a>
     </nav>
 
     <main class="text-center py-20 px-6">
-        <span class="bg-indigo-900 text-indigo-200 px-3 py-1 rounded-full text-xs">學生の專案</span>
-        <h2 class="text-4xl font-bold mt-6 mb-4">資金需求嗎?<br>JOJOPAY 幫你搞定</h2>
-        <p class="text-gray-400 mb-10">簡單、快速、安全，線上申請 5 分鐘完成，最快當日撥款</p>
+        <span class="bg-indigo-900/50 text-indigo-300 px-3 py-1 rounded-full text-xs border border-indigo-700">學生の專案</span>
+        <h2 class="text-5xl font-extrabold mt-6 mb-4 leading-tight">資金需求嗎?<br><span class="text-indigo-400">JOJOPAY</span> 幫你搞定</h2>
+        <p class="text-gray-400 mb-10 text-lg">簡單、快速、安全，線上申請 5 分鐘完成，最快當日撥款</p>
         
-        <button id="mainBtn" onclick="mainAction()" class="bg-gray-800 px-12 py-4 rounded-full font-bold text-lg hover:bg-gray-700">立即申請 →</button>
+        <button id="mainBtn" onclick="mainAction()" class="bg-white text-black px-12 py-4 rounded-full font-extrabold text-xl hover:bg-gray-200 transition-all transform hover:scale-105">立即申請 →</button>
     </main>
 
-    <section class="grid grid-cols-3 gap-4 p-8 border-t border-gray-800 text-center">
-        <div><div class="text-2xl font-bold">19,999+</div><div class="text-xs text-gray-500">服務人次</div></div>
-        <div><div class="text-2xl font-bold">100%</div><div class="text-xs text-gray-500">絕對保密</div></div>
-        <div><div class="text-2xl font-bold">24H</div><div class="text-xs text-gray-500">快速撥款</div></div>
+    <section class="grid grid-cols-3 gap-4 p-8 border-t border-gray-800 text-center bg-gray-900/30">
+        <div><div class="text-3xl font-black text-white">19,999+</div><div class="text-xs text-gray-500 uppercase tracking-widest mt-1">服務人次</div></div>
+        <div><div class="text-3xl font-black text-white">100%</div><div class="text-xs text-gray-500 uppercase tracking-widest mt-1">絕對保密</div></div>
+        <div><div class="text-3xl font-black text-white">24H</div><div class="text-xs text-gray-500 uppercase tracking-widest mt-1">快速撥款</div></div>
     </section>
 
     <script>
@@ -35,9 +39,7 @@
         const authBtn = document.getElementById('authBtn');
         const mainBtn = document.getElementById('mainBtn');
 
-        // 初始化邏輯
         if(uId) {
-            // 已登入狀態，檢查會員名稱並更新按鈕文字
             db.ref('users/'+uId).once('value', s => {
                 if(s.val()) {
                     authBtn.innerText = s.val().name + " 您好";
@@ -46,22 +48,12 @@
             });
         }
 
-        // 右上角按鈕功能
         function handleNav() {
-            if(uId) {
-                window.location.href = "Member.html";
-            } else {
-                window.location.href = "Login.html";
-            }
+            window.location.href = uId ? "Member.html" : "Login.html";
         }
 
-        // 大按鈕功能
         function mainAction() {
-            if(uId) {
-                window.location.href = "Member.html"; // 已登入則進入會員中心
-            } else {
-                window.location.href = "Register.html"; // 未登入則前往註冊
-            }
+            window.location.href = uId ? "Member.html" : "Register.html";
         }
     </script>
 </body>
