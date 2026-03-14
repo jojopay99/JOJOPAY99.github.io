@@ -82,14 +82,14 @@ db.ref('payment_requests').orderByChild('status').equalTo('pending').on('value',
     list.innerHTML = html;
 });
 
-// 處理核銷的邏輯
+// 核銷功能
 function approvePayment(reqKey, uId, amount) {
     if (!confirm("確認已收到款項並進行核銷？")) return;
 
     const userRef = db.ref('users/' + uId);
     userRef.once('value').then(snap => {
         let u = snap.val();
-        let newBalance = (u.balance || 0) - amount;
+        let newBalance = (parseInt(u.balance) || 0) - parseInt(amount);
 
         // 1. 更新餘額
         userRef.update({ balance: newBalance });
@@ -99,7 +99,7 @@ function approvePayment(reqKey, uId, amount) {
         
         // 3. 寫入歷史紀錄
         db.ref('users/' + uId + '/payLogs').push({
-            amount: amount,
+            amount: parseInt(amount),
             balanceAfter: newBalance,
             time: new Date().toLocaleString(),
             note: "後台核銷"
@@ -109,21 +109,11 @@ function approvePayment(reqKey, uId, amount) {
     });
 }
         function checkAdmin() {
-    const passwordInput = document.getElementById('admP').value;
-    console.log("嘗試登入..."); // 測試按鈕是否真的有被觸發
-    
     const pass = document.getElementById('admP').value;
     if (pass === '0895') {
         document.getElementById('loginBox').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
-        if (typeof loadData === 'function') {
-            loadData();
-        }
-        if (typeof loadData === 'function') {
-            loadData();
-        } else {
-            console.error("錯誤：找不到 loadData 函式");
-        }
+        loadData(); // 只需要呼叫一次
     } else { 
         alert("密碼錯誤，請重新輸入"); 
     }
@@ -263,8 +253,6 @@ function confirmPayment(uId, amount) {
                 alert("還款記錄成功！");
                 loadData();
                 // 在 Admin.html 中監聽
-db.ref('payment_requests').orderByChild('status').equalTo('pending').on('value', snap => {
-    const requests = snap.val();
     // 將這些 request 渲染到一個 id 為 'paymentList' 的 div 中
     // 每個項目都要有一個「確認按鈕」，按下去後執行：
     // 1. 更新 user 的 balance
@@ -359,8 +347,6 @@ function processBadDebt(id) {
 }
         function updateVal(id, field, val) { let o = {}; o[field] = val; db.ref('users/'+id).update(o).then(() => alert("成功")); }
         function deleteUser(id) { if(confirm("確定刪除？")) db.ref('users/'+id).remove(); }
-   // ... 其他程式碼 ...
-function deleteUser(id) { if(confirm("確定刪除？")) db.ref('users/'+id).remove(); }
 
 // 確保渲染後的按鈕都能被點到 (事件代理)
 document.getElementById('userList').addEventListener('click', function(e) {
