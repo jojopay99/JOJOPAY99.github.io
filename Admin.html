@@ -185,7 +185,81 @@ document.addEventListener('click', function(e) {
         viewHistory(e.target.getAttribute('data-id'), e.target.getAttribute('data-hid'));
     }
 });
+function renderUserCard(id, u) {
+    let actionHtml = '';
+    // 狀態分流邏輯
+    if (u.status === 'pending_user') {
+        actionHtml = `<button onclick="updateVal('${id}', 'status', 'verified')" class="w-full bg-green-600 py-2 rounded-xl font-bold">核准為正式會員</button>`;
+    } else if (u.status === 'verified') {
+        actionHtml = `
+            <div class="p-3 bg-black rounded-xl border border-gray-700 mb-2 text-xs">
+                <p class="text-gray-400 mb-1">設定建議額度</p>
+                <input type="number" id="limit_${id}" value="${u.loanAmount || 5000}" class="w-full bg-gray-800 p-2 rounded">
+                <button onclick="updateVal('${id}', 'loanAmount', document.getElementById('limit_${id}').value)" class="mt-2 w-full bg-indigo-600 py-1 rounded">儲存額度</button>
+            </div>`;
+    } else if (u.status === 'applying_loan') {
+        actionHtml = `
+            <div class="p-3 bg-indigo-900/30 rounded-xl border border-indigo-500 space-y-2">
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <input type="number" id="amt_${id}" value="${u.loanAmount || 5000}" placeholder="貸款金額" class="bg-black p-1 rounded">
+                    <input type="number" id="days_${id}" value="${u.loanDays || ''}" placeholder="天數" class="bg-black p-1 rounded">
+                    <input type="number" id="deduct_${id}" value="${u.deduct || 0}" placeholder="扣除金額" class="bg-black p-1 rounded col-span-2">
+                </div>
+                <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">撥款</button>
+            </div>`;
+    } else if (u.status === 'loaning') {
+        actionHtml = `
+            <div class="p-3 bg-indigo-900/30 rounded-xl border border-indigo-500 space-y-2">
+                <button onclick="approveLoan('${id}')" class="w-full bg-blue-600 py-2 rounded-lg text-sm font-bold">更新貸款資訊</button>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="updateStatus('${id}', 'paid')" class="flex-1 bg-green-700 py-1 rounded text-xs font-bold">標記已結清</button>
+                    <button onclick="updateStatus('${id}', 'bad_debt')" class="flex-1 bg-red-700 py-1 rounded text-xs font-bold">標記為呆帳</button>
+                </div>
+            </div>`;
+    } else if (u.status === 'paid') {
+        actionHtml = `<button onclick="updateVal('${id}', 'status', 'applying_loan')" class="w-full bg-blue-600 py-2 rounded-xl font-bold mb-2">重新發起貸款</button>`;
+    } else if (u.status === 'bad_debt') {
+        actionHtml = `
+            <div class="mt-4 p-3 bg-red-900/20 border border-red-600 rounded-xl space-y-3">
+                <div class="flex gap-2">
+                    <input type="number" id="badAmt_${id}" placeholder="金額" class="flex-1 bg-black p-2 rounded text-xs text-white">
+                    <button onclick="processBadDebt('${id}')" class="bg-red-700 px-3 rounded text-xs hover:bg-red-600">記錄</button>
+                </div>
+                <button onclick="updateStatus('${id}', 'paid')" class="w-full bg-green-700 py-2 rounded font-bold text-xs hover:bg-green-600">一鍵標記為：已正常結清</button>
+            </div>`;
+    }
 
+    // 進度條
+    let progressHtml = "";
+    if (u.status === 'loaning' && u.loanAmount) {
+        const progress = Math.min(100, Math.round(((u.loanAmount - (u.balance || 0)) / u.loanAmount) * 100));
+        progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="bg-blue-600 h-2 rounded-full" style="width: ${progress}%"></div></div><p class="text-[10px] text-gray-500 mt-1 text-right">還款進度: ${progress}%</p>`;
+    }
+
+    // 歷史紀錄
+    let historyHtml = '';
+    if (u.history) {
+        historyHtml = `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400"><p class="mb-1 text-gray-500">歷史紀錄：</p><div class="flex flex-wrap gap-2">`;
+        Object.keys(u.history).forEach(k => {
+            historyHtml += `<button data-id="${id}" data-hid="${k}" class="history-btn bg-gray-700 hover:bg-indigo-500 px-2 py-1 rounded text-indigo-300 transition-colors">${k}</button>`;
+        });
+        historyHtml += `</div></div>`;
+    }
+
+    return `
+    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 w-full md:w-80">
+        <h2 class="text-xl font-bold mb-4">${u.name}</h2>
+        <div class="text-xs text-gray-400 space-y-1 mb-4">
+            <p>身分證: ${id}</p>
+            <p>手機: ${u.password}</p>
+            ${u.balance !== undefined ? `<p class="text-green-400 font-bold">剩餘: ${u.balance}</p>` : ''}
+            ${progressHtml}
+        </div>
+        ${actionHtml}
+        ${historyHtml}
+        <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
+    </div>`;
+}
 function confirmPayment(uId, logId, amount) {
     const userRef = db.ref('users/' + uId);
     userRef.transaction(function(u) {
