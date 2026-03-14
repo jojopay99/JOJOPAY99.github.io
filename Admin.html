@@ -212,8 +212,8 @@ function renderUserCard(id, u) {
                 class="w-full mt-3 py-2 border border-gray-600 rounded-xl text-xs text-gray-300 hover:bg-gray-700 transition">
             查看還款詳情 (${logCount} 筆紀錄)
         </button>`;
-    }
         }
+        
 function confirmPayment(uId, amount) {
     if (!amount || isNaN(amount)) return;
     const userRef = db.ref('users/' + uId);
