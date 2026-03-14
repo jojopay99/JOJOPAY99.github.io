@@ -16,7 +16,11 @@
 
     <div id="adminPanel" style="display:none;" class="max-w-7xl mx-auto">
         <h1 class="text-3xl font-bold mb-6">JOJOPAY 管理系統</h1>
-        
+        <div id="paymentApprovalArea" class="bg-gray-800 p-6 rounded-3xl border border-yellow-600 mb-8">
+    <h2 class="text-xl font-bold mb-4 text-yellow-400">待審核還款通知</h2>
+    <div id="paymentList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        </div>
+</div>
         <div class="flex flex-wrap gap-4 mb-8 text-center text-sm justify-center">
     <div onclick="setView('pending_user')" class="bg-gray-800 p-4 rounded-2xl border border-yellow-600 cursor-pointer hover:bg-gray-700 w-32">
         <p class="text-gray-400">會員申請</p><h2 id="s_pending" class="text-xl font-bold">0</h2>
@@ -52,7 +56,58 @@
     <script>
         const db = firebase.initializeApp({ databaseURL: "https://jojopay-cefff-default-rtdb.firebaseio.com/" }).database();
         let currentView = '';
+// 監聽所有待審核的還款申請
+db.ref('payment_requests').orderByChild('status').equalTo('pending').on('value', snap => {
+    const list = document.getElementById('paymentList');
+    const requests = snap.val();
+    
+    if (!requests) {
+        list.innerHTML = '<p class="text-gray-500">目前無待審核還款</p>';
+        return;
+    }
 
+    let html = '';
+    for (let key in requests) {
+        let r = requests[key];
+        html += `
+        <div class="bg-black p-4 rounded-xl border border-gray-700">
+            <p class="text-xs text-gray-400">會員 ID: ${r.userId}</p>
+            <p class="text-2xl font-bold text-green-400">$${r.amount}</p>
+            <p class="text-xs text-gray-500 mb-2">${r.timestamp}</p>
+            <img src="${r.img}" class="w-full h-32 object-cover mb-3 rounded border border-gray-600" onclick="window.open('${r.img}')">
+            <button onclick="approvePayment('${key}', '${r.userId}', ${r.amount})" 
+                    class="w-full bg-blue-600 py-2 rounded-lg font-bold">確認收到並核銷</button>
+        </div>`;
+    }
+    list.innerHTML = html;
+});
+
+// 處理核銷的邏輯
+function approvePayment(reqKey, uId, amount) {
+    if (!confirm("確認已收到款項並進行核銷？")) return;
+
+    const userRef = db.ref('users/' + uId);
+    userRef.once('value').then(snap => {
+        let u = snap.val();
+        let newBalance = (u.balance || 0) - amount;
+
+        // 1. 更新餘額
+        userRef.update({ balance: newBalance });
+        
+        // 2. 標記請求為已完成
+        db.ref('payment_requests/' + reqKey).update({ status: 'completed' });
+        
+        // 3. 寫入歷史紀錄
+        db.ref('users/' + uId + '/payLogs').push({
+            amount: amount,
+            balanceAfter: newBalance,
+            time: new Date().toLocaleString(),
+            note: "後台核銷"
+        });
+
+        alert("已完成核銷！");
+    });
+}
         function checkAdmin() {
     const passwordInput = document.getElementById('admP').value;
     console.log("嘗試登入..."); // 測試按鈕是否真的有被觸發
@@ -207,6 +262,13 @@ function confirmPayment(uId, amount) {
             }).then(() => {
                 alert("還款記錄成功！");
                 loadData();
+                // 在 Admin.html 中監聽
+db.ref('payment_requests').orderByChild('status').equalTo('pending').on('value', snap => {
+    const requests = snap.val();
+    // 將這些 request 渲染到一個 id 為 'paymentList' 的 div 中
+    // 每個項目都要有一個「確認按鈕」，按下去後執行：
+    // 1. 更新 user 的 balance
+    // 2. 將 payment_requests 的 status 改為 'confirmed'
             });
         });
     });
