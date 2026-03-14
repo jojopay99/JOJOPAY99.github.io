@@ -203,32 +203,16 @@ function renderUserCard(id, u) {
             <p class="text-[10px] text-gray-500 mt-1 text-right">還款進度: ${progress}%</p>`;
     }
 
-    // 3. 歷史紀錄
+   // 3. 歷史紀錄：改為彈出式按鈕 (取代原本的迴圈顯示)
     let historyHtml = '';
     if (u.payLogs) {
-        historyHtml = `<div class="mt-4 pt-2 border-t border-gray-700 text-[10px] text-gray-400">
-            <p class="mb-1 text-gray-500">還款紀錄：</p>`;
-        Object.keys(u.payLogs).forEach(k => {
-            historyHtml += `<p>${u.payLogs[k].time}: $${u.payLogs[k].amount} (餘: ${u.payLogs[k].balanceAfter})</p>`;
-        });
-        historyHtml += `</div>`;
+        const logCount = Object.keys(u.payLogs).length;
+        historyHtml = `
+        <button onclick="openHistoryModal('${id}')" 
+                class="w-full mt-3 py-2 border border-gray-600 rounded-xl text-xs text-gray-300 hover:bg-gray-700 transition">
+            查看還款詳情 (${logCount} 筆紀錄)
+        </button>`;
     }
-
-    // 4. 回傳最終 HTML，確保結構整齊
-    return `
-    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 w-full md:w-80">
-        <h2 class="text-xl font-bold mb-4">${u.name}</h2>
-        <div class="text-xs text-gray-400 space-y-1 mb-4">
-            <p>身分證: ${id}</p>
-            <p>手機: ${u.password}</p>
-            ${u.balance !== undefined ? `<p class="text-green-400 font-bold">剩餘: ${u.balance}</p>` : ''}
-            ${progressHtml}
-        </div>
-        ${actionHtml}
-        ${historyHtml}
-        <button onclick="deleteUser('${id}')" class="w-full mt-4 text-xs text-red-500 opacity-50">刪除會員</button>
-    </div>`;
-}
 function confirmPayment(uId, amount) {
     if (!amount || isNaN(amount)) return;
     const userRef = db.ref('users/' + uId);
@@ -369,6 +353,32 @@ function processBadDebt(id) {
     // 這裡僅記錄處理金額，不改變狀態，因為狀態已由上面的轉移按鈕處理
     db.ref('users/' + id + '/badDebtLog').push({ amount: amt, time: new Date().toLocaleString() })
       .then(() => alert("呆帳金額已記錄"));
+}
+        function openHistoryModal(uId) {
+    const modal = document.getElementById('historyModal');
+    const content = document.getElementById('modalContent');
+    
+    db.ref(`users/${uId}/payLogs`).once('value', snap => {
+        const logs = snap.val();
+        if (!logs) return;
+        
+        let html = '<div class="space-y-2">';
+        let i = 1;
+        // 將物件轉為陣列並反轉，讓最新的紀錄在上面
+        Object.keys(logs).reverse().forEach(key => {
+            const log = logs[key];
+            html += `
+                <div class="flex justify-between border-b border-gray-700 pb-2 text-xs">
+                    <span>${i}. ${log.time}</span>
+                    <span class="text-green-400 font-bold">+$${log.amount}</span>
+                </div>`;
+            i++;
+        });
+        html += '</div>';
+        
+        content.innerHTML = html;
+        modal.classList.remove('hidden');
+    });
 }
 </script>
 <div id="historyModal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
