@@ -141,7 +141,7 @@ function approvePayment(reqKey, uId, amount) {
             });
         }
 
-function renderUserCard(id, u) {
+function renderUserCard(id, u) { {
     const status = u.status || 'unknown'; 
     let actionHtml = '';
     
@@ -213,6 +213,7 @@ function renderUserCard(id, u) {
             查看還款詳情 (${logCount} 筆紀錄)
         </button>`;
         }
+         }
         
 function confirmPayment(uId, amount) {
     if (!amount || isNaN(amount)) return;
